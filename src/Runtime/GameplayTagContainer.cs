@@ -1,4 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Xml.Linq;
 
 namespace GameplayTags.Runtime
 {
@@ -51,6 +56,7 @@ namespace GameplayTags.Runtime
 		}
 
 		// Isn't it easier to have a constructor for that?
+		// No tests written for that yet
 		public static GameplayTagContainer CreateFromArray(List<GameplayTag> sourceTags)
 		{
 			var container = new GameplayTagContainer();
@@ -321,6 +327,109 @@ namespace GameplayTags.Runtime
 			return true;
 		}
 
+		/**
+		 * Returns a filtered version of this container, returns all tags that match against any of the tags in OtherContainer, expanding parents
+		 * @param OtherContainer		The Container to filter against
+		 * @return A FGameplayTagContainer containing the filtered tags
+		 */
+		public GameplayTagContainer Filter(GameplayTagContainer otherContainer)
+		{
+			GameplayTagContainer resultContainer = new ();
+
+			foreach (GameplayTag tag in GameplayTags)
+	{
+				if (tag.MatchesAny(otherContainer))
+				{
+					resultContainer.AddTagFast(tag);
+				}
+			}
+
+			return resultContainer;
+		}
+
+		/**
+		 * Returns a filtered version of this container, returns all tags that match exactly one in OtherContainer
+		 * @param OtherContainer		The Container to filter against
+		 * @return A FGameplayTagContainer containing the filtered tags
+		 */
+		public GameplayTagContainer FilterExact(GameplayTagContainer otherContainer)
+		{
+			GameplayTagContainer resultContainer = new();
+
+			foreach (GameplayTag tag in GameplayTags)
+	{
+				if (tag.MatchesAnyExact(otherContainer))
+				{
+					resultContainer.AddTagFast(tag);
+				}
+			}
+
+			return resultContainer;
+		}
+
+		/** 
+		 * Checks if this container matches the given query.
+		 *
+		 * @param Query		Query we are checking against
+		 *
+		 * @return True if this container matches the query, false otherwise.
+		 */
+		public bool MatchesQuery(GameplayTagQuery query)
+		{
+			return query.Matches(this);
+		}
+
+		/** 
+		 * Adds all the tags from one container to this container 
+		 * NOTE: From set theory, this effectively is the union of the container this is called on with Other.
+		 *
+		 * @param Other TagContainer that has the tags you want to add to this container 
+		 */
+		public void AppendTags(GameplayTagContainer other)
+		{
+			GameplayTags.Capacity = GameplayTags.Count + other.GameplayTags.Count;
+			ParentTags.Capacity = ParentTags.Count + other.ParentTags.Count;
+
+			// Add other container's tags to our own
+			foreach (GameplayTag otherTag in other.GameplayTags)
+			{
+				GameplayTags.AddUnique(otherTag);
+			}
+
+			foreach (GameplayTag otherTag in other.ParentTags)
+			{
+				ParentTags.AddUnique(otherTag);
+			}
+		}
+
+		/** 
+		 * Adds all the tags that match between the two specified containers to this container.  WARNING: This matches any
+		 * parent tag in A, not just exact matches!  So while this should be the union of the container this is called on with
+		 * the intersection of OtherA and OtherB, it's not exactly that.  Since OtherB matches against its parents, any tag
+		 * in OtherA which has a parent match with a parent of OtherB will count.  For example, if OtherA has Color.Green
+		 * and OtherB has Color.Red, that will count as a match due to the Color parent match!
+		 * 
+		 * !!! This comment is wrong, it wont match unless Color is on one of the container. !!!
+		 * 
+		 * If you want an exact match, you need to call A.FilterExact(B) (above) to get the intersection of A with B.
+		 * If you need the disjunctive union (the union of two sets minus their intersection), use AppendTags to create
+		 * Union, FilterExact to create Intersection, and then call Union.RemoveTags(Intersection).
+		 *
+		 * @param OtherA TagContainer that has the matching tags you want to add to this container, these tags have their parents expanded
+		 * @param OtherB TagContainer used to check for matching tags.  If the tag matches on any parent, it counts as a match.
+		 */
+		// This doesn't look all that useful
+		public void AppendMatchingTags(GameplayTagContainer otherA, GameplayTagContainer otherB)
+		{
+			foreach (GameplayTag otherATag in otherA.GameplayTags)
+			{
+				if (otherATag.MatchesAny(otherB))
+				{
+					AddTag(otherATag);
+				}
+			}
+		}
+
 		public IEnumerator<GameplayTag> GetEnumerator()
 		{
 			return _gameplayTags.GetEnumerator();
@@ -343,6 +452,23 @@ namespace GameplayTags.Runtime
 
 			_parentTags.Clear();
 			_parentTags.AddRange(otherContainer._parentTags);
+		}
+
+		public override string ToString()
+		{
+			var stringBuilder = new StringBuilder();
+
+			for (int i = 0; i < GameplayTags.Count; ++i)
+			{
+				stringBuilder.Append($"\"{GameplayTags[i].ToString()}\"");
+				
+				if (i < GameplayTags.Count - 1)
+				{
+					stringBuilder.Append(", ");
+				}
+			}
+
+			return stringBuilder.ToString();
 		}
 
 		public static bool operator ==(GameplayTagContainer a, GameplayTagContainer b)
@@ -379,6 +505,76 @@ namespace GameplayTags.Runtime
 		public override int GetHashCode()
 		{
 			return _gameplayTags?.GetHashCode() ?? 0;
+		}
+
+		public bool NetSerialize()
+		{
+			// 1st bit to indicate empty tag container or not (empty tag containers are frequently replicated). Early out if empty.
+			var isEmpty = (GameplayTags.Count == 0) ? (byte)1 : (byte)0;
+			
+			// Write isEmpty
+
+			if (isEmpty == 1)
+			{
+				if (GameplayTags.Count > 0)
+				{
+					Reset();
+				}
+
+				return true;
+			}
+
+			// -------------------------------------------------------
+
+			//int numBitsForContainerSize = GameplayTagsManager.Instance.NumBitsForContainerSize;
+			int numBitsForContainerSize = 128;
+
+			var numTags = (byte)GameplayTags.Count;
+			
+			var maxSize = (1 << numBitsForContainerSize) - 1;
+
+			//if (!ensureMsgf(NumTags <= MaxSize, TEXT("TagContainer has %d elements when max is %d! Tags: %s"), NumTags, MaxSize, *ToStringSimple()))
+			//{
+			//	NumTags = MaxSize;
+			//}
+
+			//Ar.SerializeBits(&NumTags, NumBitsForContainerSize);
+			// Write NumTags
+
+			for (int i = 0; i < numTags; ++i)
+			{
+				GameplayTag Tag = GameplayTags[i];
+				Tag.NetSerialize();
+
+//#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+//				UGameplayTagsManager::Get().NotifyTagReplicated(Tag, true);
+//#endif
+			}
+
+			return true;
+		}
+
+		public bool NetDeserialize()
+		{
+			// No Common Container tags, just replicate this like normal
+			byte numTags = 0;
+			
+			// Read into numTags
+			//Ar.SerializeBits(&NumTags, NumBitsForContainerSize);
+
+			GameplayTags.Clear();
+			GameplayTags.Capacity = numTags;
+
+			//GameplayTags.AddDefaulted(NumTags);
+
+			for (byte i = 0; i < numTags; ++i)
+			{
+				GameplayTags[i].NetDeserialize();
+			}
+
+			FillParentTags();
+
+			return true;
 		}
 	}
 }

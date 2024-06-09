@@ -3,24 +3,24 @@
 	[TestClass]
 	public class GameplayTagTests
 	{
-		[TestMethod]
-		public void Is_invalid_GameplayTag_name()
-		{
-			var isValid = GameplayTag.IsValidGameplayTagString("Entity.Attributes.Strengh", out string outError, out string outFixedString);
+		//[TestMethod]
+		//public void Is_invalid_GameplayTag_name()
+		//{
+		//	var isValid = GameplayTag.IsValidGameplayTagString("Entity.Attributes.Strengh", out string outError, out string outFixedString);
 
-			Assert.IsTrue(isValid);
-		}
+		//	Assert.IsTrue(isValid);
+		//}
 
-		[TestMethod]
-		public void Is_invalid_GameplayTag_name_but_got_fixed()
-		{
-			var isValid = GameplayTag.IsValidGameplayTagString(" Entity,Attr ibutes,Strength  ", out string outError, out string outFixedString);
+		//[TestMethod]
+		//public void Is_invalid_GameplayTag_name_but_got_fixed()
+		//{
+		//	var isValid = GameplayTag.IsValidGameplayTagString(" Entity,Attr ibutes,Strength  ", out string outError, out string outFixedString);
 
-			Assert.IsFalse(isValid);
-			Assert.IsTrue(outFixedString == "Entity_Attr_ibutes_Strength");
-		}
+		//	Assert.IsFalse(isValid);
+		//	Assert.IsTrue(outFixedString == "Entity_Attr_ibutes_Strength");
+		//}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesTag")]
 		public void Tag_should_match()
 		{
 			var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -29,7 +29,7 @@
 			Assert.IsTrue(tagA.MatchesTag(tagB));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesTag")]
 		public void Tag_shouldnt_match()
 		{
 			var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A"));
@@ -38,7 +38,7 @@
 			Assert.IsFalse(tagA.MatchesTag(tagB));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesTag")]
 		public void Tag_shouldnt_match_2()
 		{
 			var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -47,7 +47,7 @@
 			Assert.IsFalse(tagA.MatchesTag(tagB));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesTagExact")]
 		public void Tag_should_match_exact()
 		{
 			var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -57,7 +57,7 @@
 			Assert.IsTrue(tagA == tagB);
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesTagExact")]
 		public void Tag_shouldnt_match_exact()
 		{
 			var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -67,7 +67,7 @@
 			Assert.IsFalse(tagA == tagB);
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesAny")]
 		public void Tag_should_match_any()
 		{
 			var tag = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -79,7 +79,7 @@
 			Assert.IsTrue(tag.MatchesAny(tagContainer));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesAny")]
 		public void Tag_shouldnt_match_any()
 		{
 			var tag = GameplayTag.RequestGameplayTag(TagName.FromString("A"));
@@ -91,7 +91,7 @@
 			Assert.IsFalse(tag.MatchesAny(tagContainer));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesAnyExact")]
 		public void Tag_should_match_any_exact()
 		{
 			var tag = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -103,7 +103,7 @@
 			Assert.IsTrue(tag.MatchesAnyExact(tagContainer));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesAnyExact")]
 		public void Tag_shouldnt_match_any_exact()
 		{
 			var tag = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
@@ -115,7 +115,7 @@
 			Assert.IsFalse(tag.MatchesAnyExact(tagContainer));
 		}
 
-		[TestMethod]
+		[TestMethod, TestCategory("MatchesTagDepth")]
 		public void Tag_should_match_depth()
 		{
 			var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));

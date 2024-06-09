@@ -8,6 +8,8 @@ namespace GameplayTags.Runtime
 
 		public readonly TagName TagName { get; }
 
+		public bool IsValid => this != EmptyTag;
+
 		[Obsolete("Use GameplayTag.RequestGameplayTag() instead.", true)]
 		public GameplayTag()
 		{
@@ -19,16 +21,9 @@ namespace GameplayTags.Runtime
 			TagName = tagName;
 		}
 
-		// Is it really necessary here since we're implementing it on GamePlayTagsManager?
 		public static GameplayTag RequestGameplayTag(TagName tagName, bool errorIfNotFound = true)
 		{
 			return GameplayTagsManager.Instance.RequestGameplayTag(tagName, errorIfNotFound);
-		}
-
-		// Editor only, Is it really necessary here since we're implementing it on GamePlayTagsManager?
-		public static bool IsValidGameplayTagString(string tagString, out string outError, out string outFixedString)
-		{
-			return GameplayTagsManager.Instance.IsValidGameplayTagString(tagString, out outError, out outFixedString);
 		}
 
 		public override string ToString()
@@ -36,7 +31,6 @@ namespace GameplayTags.Runtime
 			return TagName.ToString();
 		}
 
-		// runtime
 		public GameplayTagContainer GetSingleTagContainer()
 		{
 			var tagNode = GameplayTagsManager.Instance.FindTagNode(this);
@@ -175,6 +169,24 @@ namespace GameplayTags.Runtime
 		public int MatchesTagDepth(GameplayTag tagToCheck)
 		{
 			return GameplayTagsManager.Instance.GameplayTagsMatchDepth(this, tagToCheck);
+		}
+
+		public bool NetSerialize()
+		{
+			var netIndex = GameplayTagsManager.Instance.GetNetIndexFromTag(this);
+			return true;
+		}
+
+		public bool NetDeserialize()
+		{
+			// Read netIndex from buffer
+			// 32? shouldn't be 16?
+			//Ar.SerializeIntPacked(NetIndex32);
+			ushort netIndex = 0;
+
+			// This should actually change the TagName, so... no read-only?
+			var tagName = GameplayTagsManager.Instance.GetTagNameFromNetIndex(netIndex);
+			return true;
 		}
 
 		public override bool Equals(object? obj)

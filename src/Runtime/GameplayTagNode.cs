@@ -13,6 +13,8 @@
 		public TagName CompleteTagName => CompleteTag.TagName;
 		public TagName TagName => _tag;
 
+		public ushort NetIndex;
+
 		public GameplayTagNode()
 		{
 			SingleTagContainer = new GameplayTagContainer();

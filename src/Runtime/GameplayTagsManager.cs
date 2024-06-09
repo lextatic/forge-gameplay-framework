@@ -1,26 +1,27 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace GameplayTags.Runtime
 {
 	public class GameplayTagsManager
 	{
-		private static readonly GameplayTagsManager _instance = new GameplayTagsManager();
+		private static readonly GameplayTagsManager _instance = new();
+
+		private bool _networkIndexInvalidated = true;
 
 		public static GameplayTagsManager Instance => _instance;
+
+		private GameplayTagNode _rootTagNode = new();
+		private Dictionary<GameplayTag, GameplayTagNode> _gameplayTagNodeMap = new();
+		private List<GameplayTagNode> _networkGameplayTagNodeIndex = new();
+
+		public GameplayTagNode RootNode => _rootTagNode;
 
 		private GameplayTagsManager()
 		{
 		}
-
-		/** String with outlawed characters inside tags */
-		private const string InvalidTagCharacters = @"\, ";
-
-		private GameplayTagNode _rootTagNode = new GameplayTagNode();
-		private Dictionary<GameplayTag, GameplayTagNode> _gameplayTagNodeMap = new();
-		private bool _isConstructingGameplayTagTree;
-
-		public GameplayTagNode RootNode => _rootTagNode;
 
 		public void ConstructGameplayTagTreeFromFile(string filePath)
 		{
@@ -42,9 +43,9 @@ namespace GameplayTags.Runtime
 			TagName originalTagName = TagName.FromString(tagName);
 			string fullTagString = tagName;
 
-			//editor
+			#if EDITOR
 			{
-				if (!IsValidGameplayTagString(fullTagString, out string outError, out string outFixedString))
+				if (!GameplayTagsEditorHelper.IsValidGameplayTagString(fullTagString, out string outError, out string outFixedString))
 				{
 					if (string.IsNullOrEmpty(outFixedString))
 					{
@@ -55,6 +56,7 @@ namespace GameplayTags.Runtime
 					originalTagName = TagName.FromString(fullTagString);
 				}
 			}
+			#endif
 
 			var subTags = fullTagString.Split('.');
 
@@ -104,7 +106,7 @@ namespace GameplayTags.Runtime
 			// LowerBoundBy returns Position of the first element >= Value, may be position after last element in range
 			//int lowerBoundIndex = Algo::LowerBoundBy(NodeArray, Tag,
 			//				[](const TSharedPtr<FGameplayTagNode>&N) -> FName { return N->GetSimpleTagName(); },
-			//[] (const FName&A, const FName&B) { return A != B && UE::ComparisonUtility::CompareWithNumericSuffix(A, B) < 0; });
+			//[] (const FName&A, const FName&B) { return A != B && ComparisonUtility::CompareWithNumericSuffix(A, B) < 0; });
 
 			int lowerBoundIndex = 0;
 			if (nodeArray.Count > 0)
@@ -218,52 +220,52 @@ namespace GameplayTags.Runtime
 			}
 		}
 
-		// Editor
-		internal bool IsValidGameplayTagString(string tagString, out string outError, out string outFixedString)
-		{
-			outFixedString = tagString;
+		//// Editor
+		//internal bool IsValidGameplayTagString(string tagString, out string outError, out string outFixedString)
+		//{
+		//	outFixedString = tagString;
 
-			if (string.IsNullOrEmpty(outFixedString))
-			{
-				outError = "Tag is empty";
-				return false;
-			}
+		//	if (string.IsNullOrEmpty(outFixedString))
+		//	{
+		//		outError = "Tag is empty";
+		//		return false;
+		//	}
 
-			bool isValid = true;
-			var errorStringBuilder = new StringBuilder("");
+		//	bool isValid = true;
+		//	var errorStringBuilder = new StringBuilder("");
 
-			while (outFixedString.StartsWith("."))
-			{
-				errorStringBuilder.AppendLine("Tag names can't start with .");
-				outFixedString = outFixedString.Remove(0, 1);
-				isValid = false;
-			}
+		//	while (outFixedString.StartsWith("."))
+		//	{
+		//		errorStringBuilder.AppendLine("Tag names can't start with .");
+		//		outFixedString = outFixedString.Remove(0, 1);
+		//		isValid = false;
+		//	}
 
-			while (outFixedString.EndsWith("."))
-			{
-				errorStringBuilder.AppendLine("Tag names can't end with .");
-				outFixedString = outFixedString.Remove(outFixedString.Length - 1);
-				isValid = false;
-			}
+		//	while (outFixedString.EndsWith("."))
+		//	{
+		//		errorStringBuilder.AppendLine("Tag names can't end with .");
+		//		outFixedString = outFixedString.Remove(outFixedString.Length - 1);
+		//		isValid = false;
+		//	}
 
-			if (outFixedString.StartsWith(" ") || outFixedString.EndsWith(" "))
-			{
-				errorStringBuilder.AppendLine("Tag names can't start or end with space");
-				outFixedString = outFixedString.Trim();
-				isValid = false;
-			}
+		//	if (outFixedString.StartsWith(" ") || outFixedString.EndsWith(" "))
+		//	{
+		//		errorStringBuilder.AppendLine("Tag names can't start or end with space");
+		//		outFixedString = outFixedString.Trim();
+		//		isValid = false;
+		//	}
 
-			if (Regex.IsMatch(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]"))
-			{
-				errorStringBuilder.AppendLine("Tag has invalid characters");
-				outFixedString = Regex.Replace(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]", "_");
-				isValid = false;
-			}
+		//	if (Regex.IsMatch(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]"))
+		//	{
+		//		errorStringBuilder.AppendLine("Tag has invalid characters");
+		//		outFixedString = Regex.Replace(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]", "_");
+		//		isValid = false;
+		//	}
 
-			outError = errorStringBuilder.ToString();
+		//	outError = errorStringBuilder.ToString();
 
-			return isValid;
-		}
+		//	return isValid;
+		//}
 
 		// Deletar, fiz para debug
 		public void PrintAllTagsInNodeMap()
@@ -371,6 +373,71 @@ namespace GameplayTags.Runtime
 			}
 
 			return GameplayTagContainer.EmptyContainer;
+		}
+
+		private void VerifyNetworkIndex()
+		{
+			if (_networkIndexInvalidated)
+			{
+				ConstructNetIndex();
+			}
+		}
+
+		private void ConstructNetIndex()
+		{
+			_networkIndexInvalidated = false;
+
+			_networkGameplayTagNodeIndex.Clear();
+
+			_networkGameplayTagNodeIndex.AddRange(_gameplayTagNodeMap.Values);
+
+			_networkGameplayTagNodeIndex.Sort();
+
+			// Should make some checks
+			// Then move commonly replicated tags to the beginning
+
+			for (ushort i = 0; i < _networkGameplayTagNodeIndex.Count; ++i)
+			{
+				if (_networkGameplayTagNodeIndex[i] != null)
+				{
+					_networkGameplayTagNodeIndex[i].NetIndex = i;
+
+					Console.WriteLine($"Assigning NetIndex {i} to Tag {_networkGameplayTagNodeIndex[i]}");
+				}
+				else
+				{
+					throw new Exception($"TagNode Indice {i} is invalid!");
+				}
+			}
+		}
+
+		internal ushort GetNetIndexFromTag(GameplayTag tag)
+		{
+			VerifyNetworkIndex();
+
+			var gameplayTagNode = FindTagNode(tag);
+
+			//if (gameplayTagNode.IsValid)
+			if (gameplayTagNode != null)
+			{
+				return gameplayTagNode.NetIndex;
+			}
+
+			return ushort.MaxValue;
+			//return InvalidTagNetIndex;
+		}
+
+		internal TagName GetTagNameFromNetIndex(ushort tagIndex)
+		{
+			VerifyNetworkIndex();
+
+			if (tagIndex >= _networkGameplayTagNodeIndex.Count)
+			{
+				// Ensure Index is the invalid index. If its higher than that, then something is wrong.
+				throw new Exception($"Received invalid tag net index {tagIndex}! Tag index is out of sync on client!");
+			}
+
+			return _networkGameplayTagNodeIndex[tagIndex].TagName;
 		}
 	}
 }
