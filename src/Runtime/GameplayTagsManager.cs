@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -193,7 +194,7 @@ namespace GameplayTags.Runtime
 		{
 			var Tags1 = new HashSet<TagName>();
 			var Tags2 = new HashSet<TagName>();
-			GameplayTagNode TagNode = FindTagNode(tagA);
+			var TagNode = FindTagNode(tagA);
 			//if (TagNode.IsValid())
 			//{
 			GetAllParentNodeNames(Tags1, TagNode);
@@ -276,7 +277,15 @@ namespace GameplayTags.Runtime
 			}
 		}
 
-		internal GameplayTag RequestGameplayTag(TagName tagName, bool errorIfNotFound)
+		/**
+		 * Gets the FGameplayTag that corresponds to the TagName
+		 *
+		 * @param TagName The Name of the tag to search for
+		 * @param ErrorIfNotfound: ensure() that tag exists.
+		 * 
+		 * @return Will return the corresponding FGameplayTag or an empty one if not found.
+		 */
+		public GameplayTag RequestGameplayTag(TagName tagName, bool errorIfNotFound)
 		{
 			var possibleTag = new GameplayTag(tagName);
 
@@ -293,7 +302,15 @@ namespace GameplayTags.Runtime
 			return GameplayTag.EmptyTag;
 		}
 
-		internal GameplayTagContainer RequestGameplayTagContainer(string[] tagStrings, bool errorIfNotFound = true)
+		/**
+		* Adds the gameplay tags corresponding to the strings in the array TagStrings to OutTagsContainer
+		*
+		* @param TagStrings Array of strings to search for as tags to add to the tag container
+		* @param OutTagsContainer Container to add the found tags to.
+		* @param ErrorIfNotfound: ensure() that tags exists.
+		*
+		*/
+		public GameplayTagContainer RequestGameplayTagContainer(string[] tagStrings, bool errorIfNotFound = true)
 		{
 			var gameplayTagContainer = new GameplayTagContainer();
 
@@ -310,9 +327,40 @@ namespace GameplayTags.Runtime
 			return gameplayTagContainer;
 		}
 
-		internal bool ExtractParentTags(GameplayTag gameplayTag, List<GameplayTag> uniqueParentTags)
+		/**
+		 * Gets a Tag Container containing the supplied tag and all of its parents as explicit tags.
+		 * For example, passing in x.y.z would return a tag container with x.y.z, x.y, and x.
+		 * This will only work for tags that have been properly registered.
+		 *
+		 * @param GameplayTag The tag to use at the child most tag for this container
+		 * 
+		 * @return A tag container with the supplied tag and all its parents added explicitly, or an empty container if that failed
+		 */
+		public GameplayTagContainer RequestGameplayTagParents(GameplayTag gameplayTag)
 		{
-			if (gameplayTag == GameplayTag.EmptyTag)
+			var parentTags = GetSingleTagContainer(gameplayTag);
+
+			if (parentTags != GameplayTagContainer.EmptyContainer)
+			{
+				return parentTags.GetGameplayTagParents();
+			}
+
+			return new GameplayTagContainer();
+		}
+
+		/**
+		 * Fills in an array of gameplay tags with all of tags that are the parents of the passed in tag.
+		 * For example, passing in x.y.z would add x.y and x to UniqueParentTags if they was not already there.
+		 * This is used by the GameplayTagContainer code and may work for unregistered tags depending on serialization settings.
+		 *
+		 * @param GameplayTag The gameplay tag to extract parent tags from
+		 * @param UniqueParentTags A list of parent tags that will be added to if necessary
+		 *
+		 * @return true if any tags were added to UniqueParentTags
+		 */
+		public bool ExtractParentTags(GameplayTag gameplayTag, List<GameplayTag> uniqueParentTags)
+		{
+			if (!gameplayTag.IsValid)
 			{
 				return false;
 			}
@@ -324,10 +372,11 @@ namespace GameplayTags.Runtime
 				var singleContainer = gameplayTagNode.SingleTagContainer;
 				foreach (var tagParent in singleContainer.ParentTags)
 				{
-					if (!uniqueParentTags.Contains(tagParent))
-					{
-						uniqueParentTags.Add(tagParent);
-					}
+					uniqueParentTags.AddUnique(tagParent);
+					//if (!uniqueParentTags.Contains(tagParent))
+					//{
+					//	uniqueParentTags.Add(tagParent);
+					//}
 				}
 			}
 			// Should not clear invalid tags
@@ -339,7 +388,47 @@ namespace GameplayTags.Runtime
 			return uniqueParentTags.Count != oldSize;
 		}
 
-		internal GameplayTag RequestGameplayTagDirectParent(GameplayTag gameplayTag)
+		/**
+		 * Gets a Tag Container containing the all tags in the hierarchy that are children of this tag. Does not return the original tag
+		 *
+		 * @param GameplayTag					The Tag to use at the parent tag
+		 * 
+		 * @return A Tag Container with the supplied tag and all its parents added explicitly
+		 */
+		public GameplayTagContainer RequestGameplayTagChildren(GameplayTag gameplayTag)
+		{
+			var tagContainer = new GameplayTagContainer();
+			// Note this purposefully does not include the passed in GameplayTag in the container.
+			var gameplayTagNode = FindTagNode(gameplayTag);
+			if (gameplayTagNode != null)
+			{
+				AddChildrenTags(tagContainer, gameplayTagNode, true);
+			}
+
+			return tagContainer;
+		}
+
+		private void AddChildrenTags(GameplayTagContainer TagContainer, GameplayTagNode GameplayTagNode, bool RecurseAll)
+		{
+			if (GameplayTagNode != null)
+			{
+				List<GameplayTagNode> ChildrenNodes = GameplayTagNode.ChildTags;
+				foreach (var ChildNode in ChildrenNodes)
+				{
+					if (ChildNode != null)
+					{
+						TagContainer.AddTag(ChildNode.CompleteTag);
+						
+						if (RecurseAll)
+						{
+							AddChildrenTags(TagContainer, ChildNode, true);
+						}
+					}
+				}
+			}
+		}
+
+		public GameplayTag RequestGameplayTagDirectParent(GameplayTag gameplayTag)
 		{
 			if (_gameplayTagNodeMap.TryGetValue(gameplayTag, out GameplayTagNode? gameplayTagNode))
 			{
@@ -363,6 +452,41 @@ namespace GameplayTags.Runtime
 			}
 
 			return GameplayTagContainer.EmptyContainer;
+		}
+
+		/** Gets the list of all registered tags, setting OnlyIncludeDictionaryTags will exclude implicitly added tags if possible */
+		public GameplayTagContainer RequestAllGameplayTags(bool OnlyIncludeDictionaryTags)
+		{
+			var tagContainer = new GameplayTagContainer();
+
+			foreach (var nodePair in _gameplayTagNodeMap)
+	{
+				var tagNode = nodePair.Value;
+				if (!OnlyIncludeDictionaryTags)// || tagNode.IsExplicitTag())
+				{
+					tagContainer.AddTagFast(tagNode.CompleteTag);
+				}
+			}
+
+			return tagContainer;
+		}
+
+		/** Returns the number of parents a particular gameplay tag has.  Useful as a quick way to determine which tags may
+		 * be more "specific" than other tags without comparing whether they are in the same hierarchy or anything else.
+		 * Example: "TagA.SubTagA" has 2 Tag Nodes.  "TagA.SubTagA.LeafTagA" has 3 Tag Nodes.
+		 */
+		public int GetNumberOfTagNodes(GameplayTag GameplayTag)
+		{
+			int count = 0;
+
+			var tagNode = FindTagNode(GameplayTag);
+			while (tagNode != null)
+			{
+				++count;                                // Increment the count of valid tag nodes.
+				tagNode = tagNode.ParentTagNode;  // Continue up the chain of parents.
+			}
+
+			return count;
 		}
 
 		private GameplayTagContainer GetSingleTagContainer(GameplayTag gameplayTag)
@@ -438,6 +562,19 @@ namespace GameplayTags.Runtime
 			}
 
 			return _networkGameplayTagNodeIndex[tagIndex].TagName;
+		}
+
+		public string[] SplitGameplayTagName(GameplayTag tag)
+		{
+			var outNames = new List<string>();
+			var currentNode = FindTagNode(tag);
+			while (currentNode != null)
+			{
+				outNames.Insert(0, currentNode.TagName.ToString());
+				currentNode = currentNode.ParentTagNode;
+			}
+
+			return outNames.ToArray();
 		}
 	}
 }

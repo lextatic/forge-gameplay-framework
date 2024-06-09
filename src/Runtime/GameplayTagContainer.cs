@@ -85,10 +85,11 @@ namespace GameplayTags.Runtime
 			if (tagToAdd != GameplayTag.EmptyTag)
 			{
 				// Unreal code is AddUnique, is the check really necessary?
-				if (!_gameplayTags.Contains(tagToAdd))
-				{
-					_gameplayTags.Add(tagToAdd);
-				}
+				_gameplayTags.AddUnique(tagToAdd);
+				//if (!_gameplayTags.Contains(tagToAdd))
+				//{
+				//	_gameplayTags.Add(tagToAdd);
+				//}
 
 				GameplayTagsManager.Instance.ExtractParentTags(tagToAdd, _parentTags);
 			}
@@ -184,10 +185,11 @@ namespace GameplayTags.Runtime
 			// Add parent tags to explicit tags, the rest got copied over already
 			foreach (var tag in _parentTags)
 			{
-				if (!resultContainer._gameplayTags.Contains(tag))
-				{
-					resultContainer._gameplayTags.Add(tag);
-				}
+				resultContainer._gameplayTags.AddUnique(tag);
+				//if (!resultContainer._gameplayTags.Contains(tag))
+				//{
+				//	resultContainer._gameplayTags.Add(tag);
+				//}
 			}
 
 			return resultContainer;
