@@ -10,11 +10,6 @@ namespace GameplayTags.Runtime
 
 		public bool IsValid => this != EmptyTag;
 
-		[Obsolete("Use GameplayTag.RequestGameplayTag() instead.", true)]
-		public GameplayTag()
-		{
-			TagName = new TagName();
-		}
 
 		internal GameplayTag(TagName tagName)
 		{

@@ -12,18 +12,6 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 
 	private readonly string _name;
 
-	/// <summary>
-	/// Initializes a new instance of the <see cref="TagName"/> struct.
-	/// <para>Do not use this constructor!! Use the <see langword="static"/> method <see cref="FromString(string)"/>
-	/// instead.</para>
-	/// </summary>
-	[Obsolete($"Use {nameof(TagName)}.FromString() instead.", true)]
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Info Code Smell", "S1133:Deprecated code should be removed", Justification = "This is as intended.")]
-	public TagName()
-	{
-		_name = string.Empty;
-	}
-
 	private TagName(string name)
 	{
 		_name = name;
