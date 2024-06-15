@@ -45,15 +45,6 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	}
 
 	/// <summary>
-	/// Returns the hash code for this <see cref="TagName"/>.
-	/// </summary>
-	/// <returns>A 32-bit signed integer hash code.</returns>
-	public override int GetHashCode()
-	{
-		return _name.GetHashCode();
-	}
-
-	/// <summary>
 	/// Determines wether this instance and another specified <see cref="TagName"/> object have the same value.
 	/// </summary>
 	/// <param name="obj">The other <see cref="object"/> to compare against.</param>
@@ -80,12 +71,21 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// Determines wether this instance and another specified <see cref="TagName"/> object have the same value.
 	/// </summary>
 	/// <param name="other">The other <see cref="TagName"/> to compare against.</param>
-	/// <returns><see langword="true"/> if the value of the <paramref name="other"/> parameter is the same as the value of
-	/// this instance; otherwise, <see langword="false"/>. If <paramref name="other"/> is <see langword="null"/>, the
-	/// method returns <see langword="false"/>.</returns>
+	/// <returns><see langword="true"/> if the value of the <paramref name="other"/> parameter is the same as the value
+	/// of this instance; otherwise, <see langword="false"/>. If <paramref name="other"/> is <see langword="null"/>,
+	/// the method returns <see langword="false"/>.</returns>
 	public bool Equals(TagName other)
 	{
 		return _name.Equals(other._name);
+	}
+
+	/// <summary>
+	/// Returns the hash code for this <see cref="TagName"/>.
+	/// </summary>
+	/// <returns>A 32-bit signed integer hash code.</returns>
+	public override int GetHashCode()
+	{
+		return _name.GetHashCode();
 	}
 
 	/// <summary>

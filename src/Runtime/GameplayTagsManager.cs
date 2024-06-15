@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -365,6 +365,10 @@ namespace GameplayTags.Runtime
 				return false;
 			}
 
+#if DEBUG
+			var validationCopy = new List<GameplayTag>(uniqueParentTags);
+#endif
+
 			var oldSize = uniqueParentTags.Count;
 
 			if (_gameplayTagNodeMap.TryGetValue(gameplayTag, out GameplayTagNode? gameplayTagNode))
@@ -373,16 +377,18 @@ namespace GameplayTags.Runtime
 				foreach (var tagParent in singleContainer.ParentTags)
 				{
 					uniqueParentTags.AddUnique(tagParent);
-					//if (!uniqueParentTags.Contains(tagParent))
-					//{
-					//	uniqueParentTags.Add(tagParent);
-					//}
 				}
+#if DEBUG
+				validationCopy.AddRange(gameplayTag.ParseParentTags());
+				System.Diagnostics.Debug.Assert(
+					validationCopy == uniqueParentTags,
+					$"ExtractParentTags results are inconsistent for tag {gameplayTag}");
+#endif
 			}
-			// Should not clear invalid tags
-			//else
+			//// Should not clear invalid tags
+			//else if ()
 			//{
-			//	gameplayTag.ParseParentTags(uniqueParentTags);
+			//	uniqueParentTags = gameplayTag.ParseParentTags();
 			//}
 
 			return uniqueParentTags.Count != oldSize;
