@@ -342,7 +342,7 @@ namespace GameplayTags.Runtime
 
 			if (parentTags != GameplayTagContainer.EmptyContainer)
 			{
-				return parentTags.GetGameplayTagParents();
+				return parentTags.GetExplicitGameplayTagParents();
 			}
 
 			return new GameplayTagContainer();
@@ -358,7 +358,7 @@ namespace GameplayTags.Runtime
 		 *
 		 * @return true if any tags were added to UniqueParentTags
 		 */
-		public bool ExtractParentTags(GameplayTag gameplayTag, List<GameplayTag> uniqueParentTags)
+		public bool ExtractParentTags(GameplayTag gameplayTag, HashSet<GameplayTag> uniqueParentTags)
 		{
 			if (!gameplayTag.IsValid)
 			{
@@ -366,7 +366,7 @@ namespace GameplayTags.Runtime
 			}
 
 #if DEBUG
-			var validationCopy = new List<GameplayTag>(uniqueParentTags);
+			var validationCopy = new HashSet<GameplayTag>(uniqueParentTags);
 #endif
 
 			var oldSize = uniqueParentTags.Count;
@@ -376,12 +376,12 @@ namespace GameplayTags.Runtime
 				var singleContainer = gameplayTagNode.SingleTagContainer;
 				foreach (var tagParent in singleContainer.ParentTags)
 				{
-					uniqueParentTags.AddUnique(tagParent);
+					uniqueParentTags.Add(tagParent);
 				}
 #if DEBUG
-				validationCopy.AddRange(gameplayTag.ParseParentTags());
+				validationCopy.UnionWith(gameplayTag.ParseParentTags());
 				System.Diagnostics.Debug.Assert(
-					validationCopy == uniqueParentTags,
+					validationCopy.SetEquals(uniqueParentTags),
 					$"ExtractParentTags results are inconsistent for tag {gameplayTag}");
 #endif
 			}
@@ -454,7 +454,7 @@ namespace GameplayTags.Runtime
 
 			if (parentTags != GameplayTagContainer.EmptyContainer)
 			{
-				return parentTags.GetGameplayTagParents();
+				return parentTags.GetExplicitGameplayTagParents();
 			}
 
 			return GameplayTagContainer.EmptyContainer;

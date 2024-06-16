@@ -1,4 +1,4 @@
-﻿namespace GameplayTags.Runtime
+namespace GameplayTags.Runtime
 {
 	public class GameplayTagNode
 	{
@@ -9,7 +9,8 @@
 		public GameplayTagContainer SingleTagContainer { get; private set; }
 
 		public List<GameplayTagNode> ChildTags => _childTags;
-		public GameplayTag CompleteTag => SingleTagContainer.Count > 0 ? SingleTagContainer[0] : GameplayTag.EmptyTag;
+		public GameplayTag CompleteTag => SingleTagContainer.Count > 0 ? SingleTagContainer.Single() : GameplayTag.EmptyTag;
+
 		public TagName CompleteTagName => CompleteTag.TagName;
 		public TagName TagName => _tag;
 
@@ -32,8 +33,8 @@
 
 			if (!parentContainer.IsEmpty)
 			{
-				SingleTagContainer.ParentTags.Add(parentContainer[0]);
-				SingleTagContainer.ParentTags.AddRange(parentContainer.ParentTags);
+				SingleTagContainer.ParentTags.Add(parentContainer.Single());
+				SingleTagContainer.ParentTags.UnionWith(parentContainer.ParentTags);
 			}
 		}
 	}

@@ -104,9 +104,9 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// For example, calling this on x.y.z would add x.y and x to the returned array.
 	/// </remarks>
 	/// <returns>A list containing all raw parent tags for this tag.</returns>
-	public readonly List<GameplayTag> ParseParentTags()
+	public readonly HashSet<GameplayTag> ParseParentTags()
 	{
-		var uniqueParentTags = new List<GameplayTag>();
+		var uniqueParentTags = new HashSet<GameplayTag>();
 
 		// This needs to be in the same order as the gameplay tag node ParentTags, which is immediate parent first.
 		var rawTag = TagName;
@@ -116,12 +116,12 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 		while (dotIndex != -1)
 		{
 			// Remove everything starting with the last dot.
-			var parent = rawTag.ToString().Substring(dotIndex);
+			var parent = rawTag.ToString().Substring(0, dotIndex);
 
 			dotIndex = parent.LastIndexOf('.');
 
 			var parentTag = new GameplayTag(TagName.FromString(parent));
-			uniqueParentTags.AddUnique(parentTag);
+			uniqueParentTags.Add(parentTag);
 		}
 
 		return uniqueParentTags;
