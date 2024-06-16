@@ -39,7 +39,7 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// Returns a <see cref="string"/> representation of the <see cref="TagName"/>.
 	/// </summary>
 	/// <returns>The <see cref="TagName"/>'s name as a <see cref="string"/>.</returns>
-	public override string ToString()
+	public readonly override string ToString()
 	{
 		return _name;
 	}
@@ -51,8 +51,7 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// <returns><see langword="true"/> if the value of the <paramref name="obj"/> parameter is the same as the value of
 	/// this instance; otherwise, <see langword="false"/>. If <paramref name="obj"/> is <see langword="null"/>, the
 	/// method returns <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentException">Compared object must be of type <see cref="TagName"/>.</exception>
-	public override bool Equals(object? obj)
+	public readonly override bool Equals(object? obj)
 	{
 		if (obj is null)
 		{
@@ -74,7 +73,7 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// <returns><see langword="true"/> if the value of the <paramref name="other"/> parameter is the same as the value
 	/// of this instance; otherwise, <see langword="false"/>. If <paramref name="other"/> is <see langword="null"/>,
 	/// the method returns <see langword="false"/>.</returns>
-	public bool Equals(TagName other)
+	public readonly bool Equals(TagName other)
 	{
 		return _name.Equals(other._name);
 	}
@@ -83,7 +82,7 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// Returns the hash code for this <see cref="TagName"/>.
 	/// </summary>
 	/// <returns>A 32-bit signed integer hash code.</returns>
-	public override int GetHashCode()
+	public readonly override int GetHashCode()
 	{
 		return _name.GetHashCode();
 	}
@@ -100,7 +99,7 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// <para><b>Greater than zero</b> - this instance follows <paramref name="other"/> in the sort order.</para>
 	/// </returns>
 	/// <exception cref="ArgumentException">Compared object must be of type <see cref="TagName"/>.</exception>
-	public int CompareTo(object? obj)
+	public readonly int CompareTo(object? obj)
 	{
 		if (obj is null)
 		{
@@ -126,7 +125,7 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	/// <para><b>Zero</b> - this instance is the same position as <paramref name="other"/> in the sort order.</para>
 	/// <para><b>Greater than zero</b> - this instance follows <paramref name="other"/> in the sort order.</para>
 	/// </returns>
-	public int CompareTo(TagName other)
+	public readonly int CompareTo(TagName other)
 	{
 		return string.Compare(_name, other._name, StringComparison.InvariantCultureIgnoreCase);
 	}
