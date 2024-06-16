@@ -308,6 +308,12 @@ dotnet_diagnostic.SA1201.severity = none
 # SA1200: Using directives should be placed correctly
 dotnet_diagnostic.SA1200.severity = none
 
+# T0010: Internal Styling Rule T0010
+dotnet_diagnostic.T0010.severity = none
+
+# T0004: Internal Styling Rule T0004
+dotnet_diagnostic.T0004.severity = none
+
 [*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 tab_width = 4

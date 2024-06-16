@@ -80,7 +80,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	}
 
 	/// <summary>
-	/// Returns a new tag <see cref="GameplayTagContainer"/> that includes this <see cref="GameplayTag"/> and all
+	/// Returns a new <see cref="GameplayTagContainer"/> that includes this <see cref="GameplayTag"/> and all
 	/// parent <see cref="GameplayTag"/> as explicitly added tags.
 	/// </summary>
 	/// <remarks>
@@ -90,7 +90,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// </returns>
 	public readonly GameplayTagContainer GetGameplayTagParents()
 	{
-		return GameplayTagsManager.Instance.RequestGameplayTagDirectParents(this);
+		return GameplayTagsManager.Instance.RequestGameplayTagParents(this);
 	}
 
 #if DEBUG

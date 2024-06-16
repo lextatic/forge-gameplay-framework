@@ -43,7 +43,9 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 	/// <summary>
 	/// Initializes a new instance of the <see cref="GameplayTagContainer"/> struct.
 	/// </summary>
-	public GameplayTagContainer() { }
+	public GameplayTagContainer()
+	{
+	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="GameplayTagContainer"/> struct.

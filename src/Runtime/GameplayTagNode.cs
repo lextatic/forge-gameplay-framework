@@ -43,6 +43,11 @@ public class GameplayTagNode
 	public TagName CompleteTagName => CompleteTag.TagName;
 
 	/// <summary>
+	/// Gets a value indicating whether the tag was explicitly added and not only implied by its child tags.
+	/// </summary>
+	internal bool IsExplicitTag { get; }
+
+	/// <summary>
 	/// Initializes a new instance of the <see cref="GameplayTagNode"/> class.
 	/// </summary>
 	public GameplayTagNode()
@@ -53,13 +58,15 @@ public class GameplayTagNode
 	/// <summary>
 	/// Initializes a new instance of the <see cref="GameplayTagNode"/> class.
 	/// </summary>
-	/// <param name="tagName">The raw name for this tag at current rank in the tree.</param>
-	/// <param name="fullTagName">The complete full name for this tag.</param>
-	/// <param name="parentTagNode">The parent <see cref="GameplayTagNode"/> of this node.</param>
-	public GameplayTagNode(TagName tagName, TagName fullTagName, GameplayTagNode parentTagNode)
+	/// <param name="tagName">Short name of tag to insert.</param>
+	/// <param name="fullTagName">The full name for this tag, for performance.</param>
+	/// <param name="parentTagNode">The parent <see cref="GameplayTagNode"/> of this node, if any.</param>
+	/// <param name="isExplicit">Is the tag explicitly defined or is it implied by the existence of a child tag.</param>
+	public GameplayTagNode(TagName tagName, TagName fullTagName, GameplayTagNode parentTagNode, bool isExplicit)
 	{
 		TagName = tagName;
 		ParentTagNode = parentTagNode;
+		IsExplicitTag = isExplicit;
 
 		SingleTagContainer.GameplayTags.Add(new GameplayTag(fullTagName));
 
