@@ -1,7 +1,12 @@
-﻿namespace GameplayTags.Runtime
+namespace GameplayTags.Runtime;
+
+/// <summary>
+/// Interface for things that have tags.
+/// </summary>
+public interface ITaggable
 {
-	public interface ITaggable
-	{
-		GameplayTagContainer Tags { get; set; }
-	}
+	/// <summary>
+	/// Gets or sets the tags for this object.
+	/// </summary>
+	GameplayTagContainer Tags { get; set; }
 }
