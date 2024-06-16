@@ -1,4 +1,4 @@
-﻿namespace GameplayTags.Runtime.Tests
+namespace GameplayTags.Runtime.Tests
 {
 	[TestClass]
 	public class GameplayTagContainerTests

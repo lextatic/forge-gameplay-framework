@@ -14,7 +14,7 @@ namespace GameplayTags.Runtime
 
 		public static GameplayTagsManager Instance => _instance;
 
-		private GameplayTagNode _rootTagNode = new();
+		private GameplayTagNode _rootTagNode = new ();
 		private Dictionary<GameplayTag, GameplayTagNode> _gameplayTagNodeMap = new();
 		private List<GameplayTagNode> _networkGameplayTagNodeIndex = new();
 
