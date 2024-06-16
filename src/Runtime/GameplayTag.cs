@@ -1,4 +1,4 @@
-using System.Text;
+using System.Collections.Generic;
 
 namespace GameplayTags.Runtime;
 
@@ -51,7 +51,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// Gets a <see cref="GameplayTagContainer"/> containing only this <see cref="GameplayTag"/>.
 	/// </summary>
 	/// <returns>A <see cref="GameplayTagContainer"/> containing only this <see cref="GameplayTag"/>.</returns>
-	public GameplayTagContainer GetSingleTagContainer()
+	public readonly GameplayTagContainer GetSingleTagContainer()
 	{
 		var tagNode = GameplayTagsManager.Instance.FindTagNode(this);
 
@@ -76,7 +76,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// For example, calling on x.y.z will return x.y.
 	/// </remarks>
 	/// <returns>This <see cref="GameplayTag"/>'s direct parent.</returns>
-	public GameplayTag RequestDirectParent()
+	public readonly GameplayTag RequestDirectParent()
 	{
 		return GameplayTagsManager.Instance.RequestGameplayTagDirectParent(this);
 	}
@@ -90,7 +90,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// </remarks>
 	/// <returns>A <see cref="GameplayTagContainer"/> containing all exlicitly added parent <see cref="GameplayTag"/>s.
 	/// </returns>
-	public GameplayTagContainer GetGameplayTagParents()
+	public readonly GameplayTagContainer GetGameplayTagParents()
 	{
 		return GameplayTagsManager.Instance.RequestGameplayTagDirectParents(this);
 	}
@@ -104,7 +104,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// For example, calling this on x.y.z would add x.y and x to the returned array.
 	/// </remarks>
 	/// <returns>A list containing all raw parent tags for this tag.</returns>
-	public List<GameplayTag> ParseParentTags()
+	public readonly List<GameplayTag> ParseParentTags()
 	{
 		var uniqueParentTags = new List<GameplayTag>();
 
@@ -138,7 +138,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// </remarks>
 	/// <param name="tagToCheck"><see cref="GameplayTag"/> to check against this tag.</param>
 	/// <returns><see langword="true"/> if this <see cref="GameplayTag"/> matches <paramref name="tagToCheck"/>.</returns>
-	public bool MatchesTag(GameplayTag tagToCheck)
+	public readonly bool MatchesTag(GameplayTag tagToCheck)
 	{
 		var tagNode = GameplayTagsManager.Instance.FindTagNode(this);
 
@@ -159,7 +159,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// </remarks>
 	/// <param name="tagToCheck"><see cref="GameplayTag"/> to check against this tag.</param>
 	/// <returns><see langword="true"/> if <paramref name="tagToCheck"/> is Valid and is exactly this tag.</returns>
-	public bool MatchesTagExact(GameplayTag tagToCheck)
+	public readonly bool MatchesTagExact(GameplayTag tagToCheck)
 	{
 		if (!tagToCheck.IsValid)
 		{
@@ -182,7 +182,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// <param name="containerToCheck"><see cref="GameplayTagContainer"/> to check against this tag.</param>
 	/// <returns><see langword="true"/> if this tag matches ANY of the tags of in <paramref name="containerToCheck"/>.
 	/// </returns>
-	public bool MatchesAny(GameplayTagContainer containerToCheck)
+	public readonly bool MatchesAny(GameplayTagContainer containerToCheck)
 	{
 		var tagNode = GameplayTagsManager.Instance.FindTagNode(this);
 
@@ -206,7 +206,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// <param name="containerToCheck"><see cref="GameplayTagContainer"/> to check against this tag.</param>
 	/// <returns><see langword="true"/> if this tag matches ANY of the tags of in <paramref name="containerToCheck"/>
 	/// exactly.</returns>
-	public bool MatchesAnyExact(GameplayTagContainer containerToCheck)
+	public readonly bool MatchesAnyExact(GameplayTagContainer containerToCheck)
 	{
 		if (containerToCheck.IsEmpty)
 		{
@@ -222,16 +222,17 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// </summary>
 	/// <param name="tagToCheck"><see cref="GameplayTag"/> to match against.</param>
 	/// <returns>The depth of the match, higher means they are closer to an exact match.</returns>
-	public int MatchesTagDepth(GameplayTag tagToCheck)
+	public readonly int MatchesTagDepth(GameplayTag tagToCheck)
 	{
 		return GameplayTagsManager.Instance.GameplayTagsMatchDepth(this, tagToCheck);
 	}
 
 	/// <summary>
 	/// Serializes this <see cref="GameplayTag"/> into a <see cref="ushort"/> netIndex.
+	/// TODO: Not really implemented yet.
 	/// </summary>
 	/// <returns><see langword="true"/> if serialized successfully.</returns>
-	public bool NetSerialize()
+	public readonly bool NetSerialize()
 	{
 		// Need to actually serialize and write it a stream.
 		var netIndex = GameplayTagsManager.Instance.GetNetIndexFromTag(this);
@@ -240,9 +241,10 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 
 	/// <summary>
 	/// Deserializes this <see cref="GameplayTag"/> from a <see cref="ushort"/> netIndex value.
+	/// TODO: Not really implemented yet.
 	/// </summary>
 	/// <returns><see langword="true"/> if deserialized successfully.</returns>
-	public bool NetDeserialize()
+	public readonly bool NetDeserialize()
 	{
 		// Read netIndex from buffer
 		// 32? shouldn't be 16?
@@ -258,7 +260,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// Returns a <see cref="string"/> representation of the <see cref="GameplayTag"/>.
 	/// </summary>
 	/// <returns>The <see cref="GameplayTag"/> as a <see cref="string"/>.</returns>
-	public override string ToString()
+	public readonly override string ToString()
 	{
 		return TagName.ToString();
 	}
@@ -270,8 +272,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// <returns><see langword="true"/> if the value of the <paramref name="obj"/> parameter is the same as the value of
 	/// this instance; otherwise, <see langword="false"/>. If <paramref name="obj"/> is <see langword="null"/>, the
 	/// method returns <see langword="false"/>.</returns>
-	/// <exception cref="ArgumentException">Compared object must be of type <see cref="GameplayTag"/>.</exception>
-	public override bool Equals(object? obj)
+	public readonly override bool Equals(object? obj)
 	{
 		if (obj is null)
 		{
@@ -293,7 +294,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// <returns><see langword="true"/> if the value of the <paramref name="other"/> parameter is the same as the value
 	/// of this instance; otherwise, <see langword="false"/>. If <paramref name="other"/> is <see langword="null"/>, the
 	/// method returns <see langword="false"/>.</returns>
-	public bool Equals(GameplayTag other)
+	public readonly bool Equals(GameplayTag other)
 	{
 		return TagName.Equals(other.TagName);
 	}
@@ -302,7 +303,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// Returns the hash code for this <see cref="GameplayTag"/>.
 	/// </summary>
 	/// <returns>A 32-bit signed integer hash code.</returns>
-	public override int GetHashCode()
+	public readonly override int GetHashCode()
 	{
 		return TagName.GetHashCode();
 	}
