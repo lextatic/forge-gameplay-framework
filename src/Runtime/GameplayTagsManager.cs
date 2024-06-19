@@ -356,7 +356,7 @@ public class GameplayTagsManager
 	}
 
 	/// <summary>
-	/// Not really implemented yet.
+	/// Gets a <see cref="TagName"/> from net index and vice versa, used for replication efficiency.
 	/// </summary>
 	/// <param name="tagIndex">The index to look for.</param>
 	/// <returns>A TagName for the provided index.</returns>
@@ -371,8 +371,66 @@ public class GameplayTagsManager
 			throw new Exception($"Received invalid tag net index {tagIndex}! Tag index is out of sync on client!");
 		}
 
-		return _networkGameplayTagNodeIndex[tagIndex].TagName;
+		return _networkGameplayTagNodeIndex[tagIndex].CompleteTagName;
 	}
+
+#if DEBUG
+	/// <summary>
+	/// Returns <see langword="true"/> if this is a valid gameplay tag string (foo.bar.baz). If <see langword="false"/>,
+	/// it will fill.
+	/// </summary>
+	/// <param name="tagString">String to check for validity.</param>
+	/// <param name="outError">If non-null and string invalid, will fill in with an error message.</param>
+	/// <param name="outFixedString">If non-null and string invalid, will attempt to fix. Will be empty if no fix is
+	/// possible.</param>
+	/// <returns><see langword="true"/> if this can be added to the tag dictionary, <see langword="false"/> if there's a
+	/// syntax error.</returns>
+	internal bool IsValidGameplayTagString(string tagString, out string outError, out string outFixedString)
+	{
+		outFixedString = tagString;
+
+		if (string.IsNullOrEmpty(outFixedString))
+		{
+			outError = "Tag is empty";
+			return false;
+		}
+
+		bool isValid = true;
+		var errorStringBuilder = new StringBuilder();
+
+		while (outFixedString.StartsWith('.'))
+		{
+			errorStringBuilder.AppendLine("Tag names can't start with .");
+			outFixedString = outFixedString.Remove(0, 1);
+			isValid = false;
+		}
+
+		while (outFixedString.EndsWith('.'))
+		{
+			errorStringBuilder.AppendLine("Tag names can't end with .");
+			outFixedString = outFixedString.Remove(outFixedString.Length - 1);
+			isValid = false;
+		}
+
+		if (outFixedString.StartsWith(' ') || outFixedString.EndsWith(' '))
+		{
+			errorStringBuilder.AppendLine("Tag names can't start or end with space");
+			outFixedString = outFixedString.Trim();
+			isValid = false;
+		}
+
+		if (Regex.IsMatch(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]"))
+		{
+			errorStringBuilder.AppendLine("Tag has invalid characters");
+			outFixedString = Regex.Replace(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]", "_");
+			isValid = false;
+		}
+
+		outError = errorStringBuilder.ToString();
+
+		return isValid;
+	}
+#endif
 
 	private void AddGameplayTagToTree(string tagName)
 	{
@@ -513,54 +571,6 @@ public class GameplayTagsManager
 		}
 	}
 
-#if DEBUG
-	private bool IsValidGameplayTagString(string tagString, out string outError, out string outFixedString)
-	{
-		outFixedString = tagString;
-
-		if (string.IsNullOrEmpty(outFixedString))
-		{
-			outError = "Tag is empty";
-			return false;
-		}
-
-		bool isValid = true;
-		var errorStringBuilder = new StringBuilder();
-
-		while (outFixedString.StartsWith('.'))
-		{
-			errorStringBuilder.AppendLine("Tag names can't start with .");
-			outFixedString = outFixedString.Remove(0, 1);
-			isValid = false;
-		}
-
-		while (outFixedString.EndsWith('.'))
-		{
-			errorStringBuilder.AppendLine("Tag names can't end with .");
-			outFixedString = outFixedString.Remove(outFixedString.Length - 1);
-			isValid = false;
-		}
-
-		if (outFixedString.StartsWith(' ') || outFixedString.EndsWith(' '))
-		{
-			errorStringBuilder.AppendLine("Tag names can't start or end with space");
-			outFixedString = outFixedString.Trim();
-			isValid = false;
-		}
-
-		if (Regex.IsMatch(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]"))
-		{
-			errorStringBuilder.AppendLine("Tag has invalid characters");
-			outFixedString = Regex.Replace(outFixedString, $"[{Regex.Escape(InvalidTagCharacters)}]", "_");
-			isValid = false;
-		}
-
-		outError = errorStringBuilder.ToString();
-
-		return isValid;
-	}
-#endif
-
 	private void AddChildrenTags(GameplayTagContainer tagContainer, GameplayTagNode gameplayTagNode, bool recurseAll)
 	{
 		if (gameplayTagNode is not null)
@@ -617,7 +627,7 @@ public class GameplayTagsManager
 			{
 				_networkGameplayTagNodeIndex[i].NetIndex = i;
 
-				Console.WriteLine($"Assigning NetIndex {i} to Tag {_networkGameplayTagNodeIndex[i]}");
+				Console.WriteLine($"Assigning NetIndex {i} to Tag {_networkGameplayTagNodeIndex[i].CompleteTagName}");
 			}
 			else
 			{

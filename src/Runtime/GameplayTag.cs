@@ -46,6 +46,62 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	}
 
 	/// <summary>
+	/// Serializes this <see cref="GameplayTag"/> into a <see cref="ushort"/> netIndex.
+	/// </summary>
+	/// <remarks>
+	/// This is a example implementation, have to use a propper BitStream or something.
+	/// </remarks>
+	/// <param name="tag">The <see cref="GameplayTag"/> to be serialized.</param>
+	/// <param name="netIndex">The serialized index for this tag.</param>
+	/// <returns><see langword="true"/> if serialized successfully.</returns>
+	public static bool NetSerialize(GameplayTag tag, out ushort netIndex)
+	{
+		// Need to actually serialize and write it a stream.
+		netIndex = GameplayTagsManager.Instance.GetNetIndexFromTag(tag);
+		return true;
+	}
+
+	/// <summary>
+	/// Deserializes this <see cref="GameplayTag"/> from a <see cref="ushort"/> netIndex value.
+	/// </summary>
+	/// <remarks>
+	/// This is a example implementation, have to use a propper BitStream or something.
+	/// </remarks>
+	/// <param name="stream">The data stream to be deserialized.</param>
+	/// <param name="gameplayTag">The resulting <see cref="GameplayTag"/> from deserialization.</param>
+	/// <returns><see langword="true"/> if deserialized successfully.</returns>
+	public static bool NetDeserialize(byte[] stream, out GameplayTag gameplayTag)
+	{
+		// Read netIndex from buffer. This is just a practical example, use a BitStream reader here isntead.
+		var netIndex = new ushort[stream.Length / 2];
+		Buffer.BlockCopy(stream, 0, netIndex, 0, stream.Length);
+
+		// This should actually change the TagName, so... no read-only?
+		var tagName = GameplayTagsManager.Instance.GetTagNameFromNetIndex(netIndex[0]);
+
+		gameplayTag = GameplayTagsManager.Instance.RequestGameplayTag(tagName, true);
+
+		return true;
+	}
+
+#if DEBUG
+	/// <summary>
+	/// Returns <see langword="true"/> if this is a valid gameplay tag string (foo.bar.baz). If <see langword="false"/>,
+	/// it will fill.
+	/// </summary>
+	/// <param name="tagString">String to check for validity.</param>
+	/// <param name="outError">If non-null and string invalid, will fill in with an error message.</param>
+	/// <param name="outFixedString">If non-null and string invalid, will attempt to fix. Will be empty if no fix is
+	/// possible.</param>
+	/// <returns><see langword="true"/> if this can be added to the tag dictionary, <see langword="false"/> if there's a
+	/// syntax error.</returns>
+	public static bool IsValidGameplayTagString(string tagString, out string outError, out string outFixedString)
+	{
+		return GameplayTagsManager.Instance.IsValidGameplayTagString(tagString, out outError, out outFixedString);
+	}
+#endif
+
+	/// <summary>
 	/// Gets a <see cref="GameplayTagContainer"/> containing only this <see cref="GameplayTag"/>.
 	/// </summary>
 	/// <returns>A <see cref="GameplayTagContainer"/> containing only this <see cref="GameplayTag"/>.</returns>
@@ -223,35 +279,6 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	public readonly int MatchesTagDepth(GameplayTag tagToCheck)
 	{
 		return GameplayTagsManager.Instance.GameplayTagsMatchDepth(this, tagToCheck);
-	}
-
-	/// <summary>
-	/// Serializes this <see cref="GameplayTag"/> into a <see cref="ushort"/> netIndex.
-	/// TODO: Not really implemented yet.
-	/// </summary>
-	/// <returns><see langword="true"/> if serialized successfully.</returns>
-	public readonly bool NetSerialize()
-	{
-		// Need to actually serialize and write it a stream.
-		var netIndex = GameplayTagsManager.Instance.GetNetIndexFromTag(this);
-		return true;
-	}
-
-	/// <summary>
-	/// Deserializes this <see cref="GameplayTag"/> from a <see cref="ushort"/> netIndex value.
-	/// TODO: Not really implemented yet.
-	/// </summary>
-	/// <returns><see langword="true"/> if deserialized successfully.</returns>
-	public readonly bool NetDeserialize()
-	{
-		// Read netIndex from buffer
-		// 32? shouldn't be 16?
-		//Ar.SerializeIntPacked(NetIndex32);
-		ushort netIndex = 0;
-
-		// This should actually change the TagName, so... no read-only?
-		var tagName = GameplayTagsManager.Instance.GetTagNameFromNetIndex(netIndex);
-		return true;
 	}
 
 	/// <summary>

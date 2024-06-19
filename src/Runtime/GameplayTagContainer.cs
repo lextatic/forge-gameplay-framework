@@ -473,7 +473,7 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 
 		foreach (var tag in GameplayTags)
 		{
-			tag.NetSerialize();
+			//tag.NetSerialize();
 		}
 
 		//for (int i = 0; i < numTags; ++i)
@@ -507,7 +507,7 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 
 		foreach (var tag in GameplayTags)
 		{
-			tag.NetDeserialize();
+			//tag.NetDeserialize();
 		}
 
 		//for (byte i = 0; i < numTags; ++i)

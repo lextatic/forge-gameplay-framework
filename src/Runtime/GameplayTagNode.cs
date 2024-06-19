@@ -3,7 +3,7 @@ namespace GameplayTags.Runtime;
 /// <summary>
 /// Simple tree node for <see cref="GameplayTag"/>s, this stores metadata about specific tags.
 /// </summary>
-public class GameplayTagNode
+public class GameplayTagNode : IComparable<GameplayTagNode>
 {
 	/// <summary>
 	/// Gets the raw name for this tag at current rank in the tree.
@@ -77,5 +77,10 @@ public class GameplayTagNode
 			SingleTagContainer.ParentTags.Add(parentContainer.Single());
 			SingleTagContainer.ParentTags.UnionWith(parentContainer.ParentTags);
 		}
+	}
+
+	public int CompareTo(GameplayTagNode? other)
+	{
+		return CompleteTagName.CompareTo(other?.CompleteTagName);
 	}
 }
