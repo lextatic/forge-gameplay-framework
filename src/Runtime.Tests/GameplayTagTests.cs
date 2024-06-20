@@ -171,7 +171,7 @@ public class GameplayTagTests
 		Assert.IsTrue(tagANetIndex == 2);
 		Assert.IsTrue(tagBNetIndex == 4);
 		Assert.IsTrue(tagCNetIndex == 5);
-		Assert.IsTrue(tagDNetIndex == 6);
+		Assert.IsTrue(tagDNetIndex == 9);
 		Assert.IsTrue(tagENetIndex == 14);
 	}
 
@@ -182,7 +182,7 @@ public class GameplayTagTests
 		Assert.IsTrue(GameplayTag.NetDeserialize([2, 0], out var tagA));
 		Assert.IsTrue(GameplayTag.NetDeserialize([4, 0], out var tagB));
 		Assert.IsTrue(GameplayTag.NetDeserialize([5, 0], out var tagC));
-		Assert.IsTrue(GameplayTag.NetDeserialize([6, 0], out var tagD));
+		Assert.IsTrue(GameplayTag.NetDeserialize([9, 0], out var tagD));
 		Assert.IsTrue(GameplayTag.NetDeserialize([14, 0], out var tagE));
 
 		var tagACheck = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));

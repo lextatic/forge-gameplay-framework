@@ -79,8 +79,24 @@ public class GameplayTagNode : IComparable<GameplayTagNode>
 		}
 	}
 
+	/// <summary>
+	/// Compares two specified <see cref="GameplayTagNode?"/> objects and returns an integer that indicates their
+	/// relative position in the sort orther.
+	/// </summary>
+	/// <param name="other">The other <see cref="GameplayTagNode?"/> to compare against.</param>
+	/// <returns>A 32-bit signed integer that indicates the lexical relationship between the two comparands.
+	/// <para><b>Less than zero</b> - this instance precedes <paramref name="other"/> in the sort order.</para>
+	/// <para><b>Zero</b> - this instance is the same position as <paramref name="other"/> in the sort order.</para>
+	/// <para><b>Greater than zero</b> - this instance follows <paramref name="other"/> in the sort order.</para>
+	/// <para>If <paramref name="other"/> is null, this node is considered to precede <paramref name="other"/>.</para>
+	/// </returns>
 	public int CompareTo(GameplayTagNode? other)
 	{
-		return CompleteTagName.CompareTo(other?.CompleteTagName);
+		if (other is null)
+		{
+			return -1;
+		}
+
+		return CompleteTagName.CompareTo(other.CompleteTagName);
 	}
 }

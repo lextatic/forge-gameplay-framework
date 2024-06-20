@@ -63,12 +63,5 @@ public class TagNameTests
 		Assert.IsTrue(tagNameA >= tagNameC);
 		Assert.IsTrue(tagNameA <= tagNameB);
 		Assert.IsTrue(tagNameB >= tagNameC);
-
-		object tagObjectA = tagNameA;
-		object tagObjectC = tagNameC;
-
-		Assert.IsTrue(tagNameA.CompareTo(tagObjectA) == 0);
-		Assert.IsTrue(tagNameB.CompareTo(tagObjectA) > 0);
-		Assert.IsTrue(tagNameA.CompareTo(tagObjectC) == 0);
 	}
 }

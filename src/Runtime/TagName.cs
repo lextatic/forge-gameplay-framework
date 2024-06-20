@@ -6,7 +6,7 @@ namespace GameplayTags.Runtime;
 /// <see cref="TagName"/> is requested. All instantiations should be handled by the <see langword="static"/> method
 /// <see cref="FromString(string)"/>.
 /// </summary>
-public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<TagName>
+public readonly struct TagName : IComparable<TagName>, IEquatable<TagName>
 {
 	private static readonly Dictionary<string, TagName> _nameTable = new ();
 
@@ -85,33 +85,6 @@ public readonly struct TagName : IComparable, IComparable<TagName>, IEquatable<T
 	public readonly override int GetHashCode()
 	{
 		return _name.GetHashCode();
-	}
-
-	/// <summary>
-	/// Compares two specified <see cref="TagName"/> objects using
-	/// <see cref="StringComparison.InvariantCultureIgnoreCase"/>, and returns an integer that indicates their relative
-	/// position in the sort orther.
-	/// </summary>
-	/// <param name="obj">The other <see cref="object"/> to compare against.</param>
-	/// <returns>A 32-bit signed integer that indicates the lexical relationship between the two comparands.
-	/// <para><b>Less than zero</b> - this instance precedes <paramref name="other"/> in the sort order.</para>
-	/// <para><b>Zero</b> - this instance is the same position as <paramref name="other"/> in the sort order.</para>
-	/// <para><b>Greater than zero</b> - this instance follows <paramref name="other"/> in the sort order.</para>
-	/// </returns>
-	/// <exception cref="ArgumentException">Compared object must be of type <see cref="TagName"/>.</exception>
-	public readonly int CompareTo(object? obj)
-	{
-		if (obj is null)
-		{
-			return 1;
-		}
-
-		if (obj is not TagName tagName)
-		{
-			throw new ArgumentException($"Compared object must be of type {nameof(TagName)}.");
-		}
-
-		return CompareTo(tagName);
 	}
 
 	/// <summary>

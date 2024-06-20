@@ -317,6 +317,9 @@ dotnet_diagnostic.T0010.severity = none
 # T0004: Internal Styling Rule T0004
 dotnet_diagnostic.T0004.severity = none
 
+# SA1129: Do not use default value type constructor
+dotnet_diagnostic.SA1129.severity = none
+
 [*.{cs,vb}]
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 tab_width = 4
