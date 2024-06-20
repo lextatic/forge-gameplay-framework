@@ -62,13 +62,18 @@ public class GameplayTagNode : IComparable<GameplayTagNode>
 	/// <param name="fullTagName">The full name for this tag, for performance.</param>
 	/// <param name="parentTagNode">The parent <see cref="GameplayTagNode"/> of this node, if any.</param>
 	/// <param name="isExplicit">Is the tag explicitly defined or is it implied by the existence of a child tag.</param>
-	public GameplayTagNode(TagName tagName, TagName fullTagName, GameplayTagNode parentTagNode, bool isExplicit)
+	public GameplayTagNode(TagName tagName, TagName fullTagName, GameplayTagNode? parentTagNode, bool isExplicit)
 	{
 		TagName = tagName;
 		ParentTagNode = parentTagNode;
 		IsExplicitTag = isExplicit;
 
 		SingleTagContainer.GameplayTags.Add(new GameplayTag(fullTagName));
+
+		if (parentTagNode is null)
+		{
+			return;
+		}
 
 		var parentContainer = parentTagNode.SingleTagContainer;
 

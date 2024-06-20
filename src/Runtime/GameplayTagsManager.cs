@@ -535,8 +535,7 @@ public class GameplayTagsManager
 			}
 
 			// Don't add the root node as parent.
-			var tagNode = new GameplayTagNode(tagName, fullTagName, parentNode, isExplicitTag);
-			//MakeShareable(new FGameplayTagNode(Tag, FullTag, ParentNode != GameplayRootTag ? ParentNode : nullptr, bIsExplicitTag, bIsRestrictedTag, bAllowNonRestrictedChildren));
+			var tagNode = new GameplayTagNode(tagName, fullTagName, parentNode != RootNode ? parentNode : null, isExplicitTag);
 
 			// Add at the sorted location.
 			nodeArray.Insert((int)whereToInsert, tagNode);
@@ -563,9 +562,8 @@ public class GameplayTagsManager
 		namesList.Add(tag.CompleteTagName);
 
 		var parent = tag.ParentTagNode;
-		Debug.Assert(parent is not null, "Parent should never be null.");
 
-		if (parent != RootNode)
+		if (parent is not null)
 		{
 			GetAllParentNodeNames(namesList, parent);
 		}
