@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using System.Text;
 
 namespace GameplayTags.Runtime;
@@ -76,6 +77,100 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 	{
 		GameplayTags.UnionWith(sourceTags);
 		FillParentTags();
+	}
+
+	/// <summary>
+	/// Efficient network serialize, takes advantage of the dictionary.
+	/// </summary>
+	/// <param name="container">The <see cref="GameplayTagContainer"/> to be serialized.</param>
+	/// <param name="serializedContainerStream">The serialized stream for this caontainer.</param>
+	/// <returns><see langword="true"/> if successfully serialized; <see langword="false"/> otherwise.</returns>
+	public static bool NetSerialize(GameplayTagContainer container, out byte[] serializedContainerStream)
+	{
+		var containerStream = new List<byte>();
+
+		// 1st bit to indicate empty tag container or not (empty tag containers are frequently replicated). Early out
+		// if empty.
+		var isEmpty = (container.GameplayTags.Count == 0) ? (byte)1 : (byte)0;
+		containerStream.Add(isEmpty);
+
+		if (isEmpty == 1)
+		{
+			if (container.GameplayTags.Count > 0)
+			{
+				container.Reset(container.GameplayTags.Count);
+			}
+
+			serializedContainerStream = containerStream.ToArray();
+
+			return true;
+		}
+
+		// int numBitsForContainerSize = GameplayTagsManager.Instance.NumBitsForContainerSize;
+		int numBitsForContainerSize = 6;
+
+		var numTags = (byte)container.GameplayTags.Count;
+		var maxSize = (1 << numBitsForContainerSize) - 1;
+
+		Debug.Assert(numTags <= maxSize, $"Container has {numTags} elements when max is {maxSize}! Tags: {container}");
+
+		containerStream.Add(numTags);
+
+		foreach (var tag in container.GameplayTags)
+		{
+			GameplayTag.NetSerialize(tag, out var index);
+
+			// Read netIndex from buffer. This is just a practical example, use a BitStream reader here isntead.
+			var netIndex = new ushort[] { index };
+			var netIndexStream = new byte[2];
+			Buffer.BlockCopy(netIndex, 0, netIndexStream, 0, 2);
+
+			containerStream.AddRange(netIndexStream);
+
+			// TODO: Make tag replication statistics for replication optimization
+			//#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
+			//				UGameplayTagsManager::Get().NotifyTagReplicated(Tag, true);
+			//#endif
+		}
+
+		serializedContainerStream = containerStream.ToArray();
+
+		return true;
+	}
+
+	/// <summary>
+	/// Efficient network deserialize, takes advantage of the dictionary.
+	/// </summary>
+	/// <param name="stream">The data stream to be deserialized.</param>
+	/// <param name="deserializedContainer">The resulting <see cref="GameplayTagContainer"/> from deserialization.
+	/// </param>
+	/// <returns><see langword="true"/> if successfully deserialized; <see langword="false"/> otherwise.</returns>
+	public static bool NetDeserialize(byte[] stream, out GameplayTagContainer deserializedContainer)
+	{
+		deserializedContainer = new GameplayTagContainer();
+
+		if (stream[0] == 1)
+		{
+			return true;
+		}
+
+		// No Common Container tags, just replicate this like normal.
+		byte numTags = stream[1];
+		deserializedContainer.GameplayTags.EnsureCapacity(numTags);
+
+		for (int i = 0; i < numTags; i++)
+		{
+			var tagStream = new byte[2];
+			Array.Copy(stream, 2 + (2 * i), tagStream, 0, 2);
+
+			GameplayTag.NetDeserialize(tagStream, out var deserializedTag);
+
+			deserializedContainer.AddTag(deserializedTag);
+		}
+
+		deserializedContainer.FillParentTags();
+
+		return true;
 	}
 
 	/// <summary>
@@ -431,93 +526,6 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 				AddTag(otherATag);
 			}
 		}
-	}
-
-	/// <summary>
-	/// Efficient network serialize, takes advantage of the dictionary.
-	/// TODO: Not really implemented yet.
-	/// </summary>
-	/// <returns><see langword="true"/> if successfully serialized; <see langword="false"/> otherwise.</returns>
-	public readonly bool NetSerialize()
-	{
-		// 1st bit to indicate empty tag container or not (empty tag containers are frequently replicated). Early out if empty.
-		var isEmpty = (GameplayTags.Count == 0) ? (byte)1 : (byte)0;
-
-		// Write isEmpty
-		if (isEmpty == 1)
-		{
-			if (GameplayTags.Count > 0)
-			{
-				Reset(GameplayTags.Count);
-			}
-
-			return true;
-		}
-
-		// -------------------------------------------------------
-
-		//int numBitsForContainerSize = GameplayTagsManager.Instance.NumBitsForContainerSize;
-		int numBitsForContainerSize = 128;
-
-		var numTags = (byte)GameplayTags.Count;
-
-		var maxSize = (1 << numBitsForContainerSize) - 1;
-
-		//if (!ensureMsgf(NumTags <= MaxSize, TEXT("TagContainer has %d elements when max is %d! Tags: %s"), NumTags, MaxSize, *ToStringSimple()))
-		//{
-		//	NumTags = MaxSize;
-		//}
-
-		//Ar.SerializeBits(&NumTags, NumBitsForContainerSize);
-		// Write NumTags
-
-		foreach (var tag in GameplayTags)
-		{
-			//tag.NetSerialize();
-		}
-
-		//for (int i = 0; i < numTags; ++i)
-		//{
-		//	GameplayTag Tag = GameplayTags[i];
-		//	Tag.NetSerialize();
-
-		//	//#if !(UE_BUILD_SHIPPING || UE_BUILD_TEST)
-		//	//				UGameplayTagsManager::Get().NotifyTagReplicated(Tag, true);
-		//	//#endif
-		//}
-
-		return true;
-	}
-
-	/// <summary>
-	/// Efficient network deserialize, takes advantage of the dictionary.
-	/// TODO: Not really implemented yet.
-	/// </summary>
-	/// <returns><see langword="true"/> if successfully deserialized; <see langword="false"/> otherwise.</returns>
-	public readonly bool NetDeserialize()
-	{
-		// No Common Container tags, just replicate this like normal
-		byte numTags = 0;
-
-		// Read into numTags
-		//Ar.SerializeBits(&NumTags, NumBitsForContainerSize);
-
-		GameplayTags.Clear();
-		GameplayTags.EnsureCapacity(numTags);
-
-		foreach (var tag in GameplayTags)
-		{
-			//tag.NetDeserialize();
-		}
-
-		//for (byte i = 0; i < numTags; ++i)
-		//{
-		//	GameplayTags[i].NetDeserialize();
-		//}
-
-		FillParentTags();
-
-		return true;
 	}
 
 	/// <summary>

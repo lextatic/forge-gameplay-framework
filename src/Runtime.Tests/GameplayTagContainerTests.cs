@@ -309,4 +309,52 @@ public class GameplayTagContainerTests
 
 		Assert.IsFalse(tagContainerA.MatchesQuery(query));
 	}
+
+	[TestMethod]
+	[TestCategory("Serialization")]
+	public void Container_should_serialize_successfully()
+	{
+		var tagContainer = new GameplayTagContainer();
+		tagContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.1")));
+		tagContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.B.1")));
+		tagContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.B.2")));
+		tagContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.C.3")));
+		tagContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("Character.Attributes.Dex")));
+
+		GameplayTagContainer.NetSerialize(tagContainer, out var containerStream);
+
+		Assert.IsTrue(containerStream[0] == 0);
+		Assert.IsTrue(containerStream.Length == 12);
+		Assert.IsTrue(containerStream.SequenceEqual(new byte[] { 0, 5, 2, 0, 4, 0, 5, 0, 9, 0, 14, 0 }));
+	}
+
+	[TestMethod]
+	[TestCategory("Serialization")]
+	public void Container_should_serialize_empty_container_successfully()
+	{
+		var tagContainer = new GameplayTagContainer();
+
+		GameplayTagContainer.NetSerialize(tagContainer, out var containerStream);
+
+		Assert.IsTrue(containerStream[0] == 1);
+		Assert.IsTrue(containerStream.Length == 1);
+	}
+
+	[TestMethod]
+	[TestCategory("Serialization")]
+	public void Container_should_deserialize_successfully()
+	{
+		Assert.IsTrue(GameplayTagContainer.NetDeserialize(
+			[0, 5, 2, 0, 4, 0, 5, 0, 9, 0, 14, 0],
+			out var deserializedContainer));
+
+		var tagContainerCheck = new GameplayTagContainer();
+		tagContainerCheck.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.1")));
+		tagContainerCheck.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.B.1")));
+		tagContainerCheck.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.B.2")));
+		tagContainerCheck.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.C.3")));
+		tagContainerCheck.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("Character.Attributes.Dex")));
+
+		Assert.IsTrue(deserializedContainer == tagContainerCheck);
+	}
 }
