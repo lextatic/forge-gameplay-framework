@@ -4,7 +4,8 @@ namespace GameplayTags.Runtime.Tests;
 [TestClass]
 public class GameplayTagContainerTests
 {
-	[TestMethod, TestCategory("HasTag")]
+	[TestMethod]
+	[TestCategory("HasTag")]
 	public void Container_should_have_tag()
 	{
 		var tagContainer = new GameplayTagContainer();
@@ -16,7 +17,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainer.HasTag(tag));
 	}
 
-	[TestMethod, TestCategory("HasTag")]
+	[TestMethod]
+	[TestCategory("HasTag")]
 	public void Container_should_not_have_tag()
 	{
 		var tagContainer = new GameplayTagContainer();
@@ -28,7 +30,8 @@ public class GameplayTagContainerTests
 		Assert.IsFalse(tagContainer.HasTag(tag));
 	}
 
-	[TestMethod, TestCategory("HasTagExact")]
+	[TestMethod]
+	[TestCategory("HasTagExact")]
 	public void Container_should_have_tag_exact()
 	{
 		var tagContainer = new GameplayTagContainer();
@@ -40,7 +43,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainer.HasTagExact(tag));
 	}
 
-	[TestMethod, TestCategory("HasTagExact")]
+	[TestMethod]
+	[TestCategory("HasTagExact")]
 	public void Container_should_not_have_tag_exact()
 	{
 		var tagContainer = new GameplayTagContainer();
@@ -52,7 +56,8 @@ public class GameplayTagContainerTests
 		Assert.IsFalse(tagContainer.HasTagExact(tag));
 	}
 
-	[TestMethod, TestCategory("HasAny")]
+	[TestMethod]
+	[TestCategory("HasAny")]
 	public void Container_A_should_have_any_container_B_tag()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -65,7 +70,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerA.HasAny(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAny")]
+	[TestMethod]
+	[TestCategory("HasAny")]
 	public void Container_A_should_not_have_any_container_B_tag()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -78,7 +84,8 @@ public class GameplayTagContainerTests
 		Assert.IsFalse(tagContainerA.HasAny(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAnyExact")]
+	[TestMethod]
+	[TestCategory("HasAnyExact")]
 	public void Container_A_should_have_any_container_B_tag_exact()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -91,7 +98,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerA.HasAnyExact(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAnyExact")]
+	[TestMethod]
+	[TestCategory("HasAnyExact")]
 	public void Container_A_should_not_have_any_container_B_tag_exact()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -104,7 +112,8 @@ public class GameplayTagContainerTests
 		Assert.IsFalse(tagContainerA.HasAnyExact(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAll")]
+	[TestMethod]
+	[TestCategory("HasAll")]
 	public void Container_A_should_have_all_container_B_tags()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -118,7 +127,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerA.HasAll(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAll")]
+	[TestMethod]
+	[TestCategory("HasAll")]
 	public void Container_A_should_not_have_all_container_B_tags()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -132,7 +142,8 @@ public class GameplayTagContainerTests
 		Assert.IsFalse(tagContainerA.HasAll(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAllExact")]
+	[TestMethod]
+	[TestCategory("HasAllExact")]
 	public void Container_A_should_have_all_container_B_tags_exact()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -146,7 +157,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerA.HasAllExact(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("HasAllExact")]
+	[TestMethod]
+	[TestCategory("HasAllExact")]
 	public void Container_A_should_not_have_all_container_B_tags_exact()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -160,7 +172,8 @@ public class GameplayTagContainerTests
 		Assert.IsFalse(tagContainerA.HasAllExact(tagContainerB));
 	}
 
-	[TestMethod, TestCategory("Filter")]
+	[TestMethod]
+	[TestCategory("Filter")]
 	public void Container_A_filter_container_B_should_have_tags_A1_and_B1_only()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -174,16 +187,17 @@ public class GameplayTagContainerTests
 		tagContainerB.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("B")));
 
 		var tagContainerC = tagContainerA.Filter(tagContainerB);
-		
+
 		var validationContainer = new GameplayTagContainer();
 		validationContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.1")));
 		validationContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("B.1")));
-		
+
 		Assert.IsTrue(tagContainerC.HasAllExact(validationContainer));
 		Assert.IsTrue(tagContainerC.Count == 2);
 	}
 
-	[TestMethod, TestCategory("FilterExact")]
+	[TestMethod]
+	[TestCategory("FilterExact")]
 	public void Container_A_filter_exact_container_B_should_not_have_tag_A1_only()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -200,12 +214,13 @@ public class GameplayTagContainerTests
 
 		var validationContainer = new GameplayTagContainer();
 		validationContainer.AddTag(GameplayTag.RequestGameplayTag(TagName.FromString("A.1")));
-		
+
 		Assert.IsTrue(tagContainerC.HasAllExact(validationContainer));
 		Assert.IsTrue(tagContainerC.Count == 1);
 	}
 
-	[TestMethod, TestCategory("Append")]
+	[TestMethod]
+	[TestCategory("Append")]
 	public void Container_A_append_container_B_should_have_all_tags_from_both()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -231,7 +246,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerA.Count == 5);
 	}
 
-	[TestMethod, TestCategory("AppendMatchingTags")]
+	[TestMethod]
+	[TestCategory("AppendMatchingTags")]
 	public void Container_A_append_matching_tags_container_B_should_add_b1_only()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -256,7 +272,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerC.Count == 2);
 	}
 
-	[TestMethod, TestCategory("MatchesQuery")]
+	[TestMethod]
+	[TestCategory("MatchesQuery")]
 	public void Container_matches_query_should_match()
 	{
 		var tagContainerA = new GameplayTagContainer();
@@ -274,7 +291,8 @@ public class GameplayTagContainerTests
 		Assert.IsTrue(tagContainerA.MatchesQuery(query));
 	}
 
-	[TestMethod, TestCategory("MatchesQuery")]
+	[TestMethod]
+	[TestCategory("MatchesQuery")]
 	public void Container_matches_query_shouldnt_match()
 	{
 		var tagContainerA = new GameplayTagContainer();
