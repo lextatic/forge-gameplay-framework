@@ -1,4 +1,5 @@
 #pragma warning disable SA1600 // Elements should be documented
+using System.Drawing;
 using System.Threading;
 
 namespace GameplayTags.Runtime.Tests;
@@ -744,5 +745,67 @@ public class GameplayTagTests
 		Assert.IsTrue(GameplayTag.EmptyTag.MatchesTagDepth(tagC) == 0);
 		Assert.IsTrue(GameplayTag.EmptyTag.MatchesTagDepth(tagD) == 0);
 		Assert.IsTrue(GameplayTag.EmptyTag.MatchesTagDepth(tagE) == 0);
+	}
+
+	[TestMethod]
+	[TestCategory("Equality")]
+	public void Tags_are_equatable()
+	{
+		var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
+		var tagB = GameplayTag.RequestGameplayTag(TagName.FromString("B.1"));
+		var tagC = GameplayTag.RequestGameplayTag(TagName.FromString("a.1"));
+
+		Assert.AreEqual(tagA, tagC);
+		Assert.AreNotEqual(tagA, tagB);
+		Assert.AreNotEqual(tagB, tagC);
+
+		Assert.IsTrue(tagA != tagB);
+		Assert.IsTrue(tagB != tagC);
+		Assert.IsTrue(tagA == tagC);
+		Assert.IsTrue(tagA.Equals(tagC));
+
+		object tagObjectA = tagA;
+		object tagObjectB = tagB;
+		object tagObjectC = tagC;
+
+		Assert.IsTrue(tagA.Equals(tagObjectA));
+		Assert.IsTrue(tagA.Equals(tagObjectC));
+		Assert.IsTrue(tagObjectA.Equals(tagObjectC));
+
+		Assert.IsTrue((GameplayTag)tagObjectA == (GameplayTag)tagObjectC);
+
+		// Those are defaul C# object == and !=, not the overriden ones.
+		// So they should be considered different objects
+		Assert.IsTrue(tagObjectA != tagObjectB);
+		Assert.IsTrue(tagObjectA != tagObjectC);
+		Assert.IsFalse(tagObjectA == tagObjectB);
+		Assert.IsFalse(tagObjectA == tagObjectC);
+	}
+
+	[TestMethod]
+	[TestCategory("Equality")]
+	public void TagName_from_empty_string_is_EmptyTag()
+	{
+		var tagName1 = TagName.FromString(string.Empty);
+
+		Assert.IsTrue(tagName1 == TagName.Empty);
+	}
+
+	[TestMethod]
+	[TestCategory("ToString")]
+	public void Tag_ToString_returns_lowercase_string()
+	{
+		var tagA = GameplayTag.RequestGameplayTag(TagName.FromString("A.1"));
+		var tagB = GameplayTag.RequestGameplayTag(TagName.FromString("Character.Attributes.Dex"));
+
+		Assert.IsTrue(string.Compare(tagA.ToString(), "a.1", false) == 0);
+		Assert.IsTrue(string.Compare(tagB.ToString(), "character.attributes.dex", false) == 0);
+	}
+
+	[TestMethod]
+	[TestCategory("ToString")]
+	public void EmptyTag_ToString_returns_empty_string()
+	{
+		Assert.IsTrue(string.Compare(GameplayTag.EmptyTag.ToString(), string.Empty) == 0);
 	}
 }
