@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace GameplayTags.Runtime;
 
 /// <summary>
@@ -130,7 +128,11 @@ public class GameplayTagQueryExpression
 	/// <returns>This <see cref="GameplayTagQueryExpression"/> itself.</returns>
 	public GameplayTagQueryExpression AddTag(GameplayTag tag)
 	{
-		Debug.Assert(UsesTagSet(), "Shouldn't be adding tags to a query of ExpressionSet type.");
+		if (!UsesTagSet())
+		{
+			throw new Exception("Shouldn't be adding expressions to a query of TagSet type.");
+		}
+
 		_tagSet.Add(tag);
 		return this;
 	}
@@ -142,7 +144,11 @@ public class GameplayTagQueryExpression
 	/// <returns>This <see cref="GameplayTagContainer"/> itself.</returns>
 	public GameplayTagQueryExpression AddTags(GameplayTagContainer tags)
 	{
-		Debug.Assert(UsesTagSet(), "Shouldn't be adding tags to a query of ExpressionSet type.");
+		if (!UsesTagSet())
+		{
+			throw new Exception("Shouldn't be adding expressions to a query of TagSet type.");
+		}
+
 		_tagSet.AddRange(tags.GameplayTags);
 		return this;
 	}
@@ -154,7 +160,11 @@ public class GameplayTagQueryExpression
 	/// <returns>This <see cref="GameplayTagQueryExpression"/> itself.</returns>
 	public GameplayTagQueryExpression AddExpression(GameplayTagQueryExpression expression)
 	{
-		Debug.Assert(UsesExpressionSet(), "Shouldn't be adding expressions to a query of TagSet type.");
+		if (!UsesExpressionSet())
+		{
+			throw new Exception("Shouldn't be adding tags to a query of ExpressionSet type.");
+		}
+
 		_expressionSet.Add(expression);
 		return this;
 	}
@@ -187,7 +197,11 @@ public class GameplayTagQueryExpression
 					int tagIndex = tagDictionary.AddUnique(tag);
 
 					// We reserve token 255 for internal use, so 254 is max unique tags.
-					Debug.Assert(tagIndex <= 254, "Stream can't hold more than 254 tags.");
+					if (tagIndex > 254)
+					{
+						throw new Exception("Stream can't hold more than 254 tags.");
+					}
+
 					tokenStream.Add((byte)tagIndex);
 				}
 

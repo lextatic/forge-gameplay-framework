@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace GameplayTags.Runtime;
 
 /// <summary>
@@ -251,7 +249,11 @@ public class GameplayTagQuery
 	/// <param name="container">The <see cref="GameplayTagContainer"/> with the new tags being replaced.</param>
 	public void ReplaceTagsFast(GameplayTagContainer container)
 	{
-		Debug.Assert(container.Count == _tagDictionary.Count, "Must use containers with the same size.");
+		if (container.Count != _tagDictionary.Count)
+		{
+			throw new Exception("Must use containers with the same size.");
+		}
+
 		_tagDictionary.Clear();
 		_tagDictionary.AddRange(container.GameplayTags);
 	}
@@ -265,7 +267,11 @@ public class GameplayTagQuery
 	/// <param name="tag">The new <see cref="GameplayTag"/> being replaced.</param>
 	public void ReplaceTagFast(GameplayTag tag)
 	{
-		Debug.Assert(_tagDictionary.Count == 1, "Must use single containers.");
+		if (_tagDictionary.Count != 1)
+		{
+			throw new Exception("Must use single containers.");
+		}
+
 		_tagDictionary.Clear();
 		_tagDictionary.Add(tag);
 	}
@@ -277,9 +283,6 @@ public class GameplayTagQuery
 	/// <returns>A <see cref="GameplayTag"/> from the tag dictionay.</returns>
 	internal GameplayTag GetTagFromIndex(int tagIndex)
 	{
-		Debug.Assert(
-			_tagDictionary.Count > tagIndex && tagIndex >= 0,
-			"tagIndex should be a valid _tagDictionary index.");
 		return _tagDictionary[tagIndex];
 	}
 }

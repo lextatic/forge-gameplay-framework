@@ -13,7 +13,7 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 	/// <summary>
 	/// Gets an empty <see cref="GameplayTagContainer"/>.
 	/// </summary>
-	public static GameplayTagContainer EmptyContainer => default;
+	public static GameplayTagContainer EmptyContainer { get; } = new ();
 
 	/// <summary>
 	/// Gets the set of <see cref="GameplayTag"/>s in this container.
@@ -106,13 +106,14 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 			return true;
 		}
 
-		// int numBitsForContainerSize = GameplayTagsManager.Instance.NumBitsForContainerSize;
-		int numBitsForContainerSize = 6;
-
 		var numTags = (byte)container.GameplayTags.Count;
-		var maxSize = (1 << numBitsForContainerSize) - 1;
+		var maxSize = (1 << GameplayTagsManager.Instance.NumBitsForContainerSize) - 1;
 
-		Debug.Assert(numTags <= maxSize, $"Container has {numTags} elements when max is {maxSize}! Tags: {container}");
+		// throw
+		if (numTags > maxSize)
+		{
+			throw new Exception($"Container has {numTags} elements when max is {maxSize}!\n\nTags: {container}");
+		}
 
 		containerStream.Add(numTags);
 

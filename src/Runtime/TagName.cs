@@ -12,6 +12,11 @@ public readonly struct TagName : IComparable<TagName>, IEquatable<TagName>
 
 	private readonly string _name;
 
+	/// <summary>
+	/// Gets a default Empty <see cref="TagName"/>.
+	/// </summary>
+	public static TagName Empty { get; } = new (string.Empty);
+
 	private TagName(string name)
 	{
 		_name = name;

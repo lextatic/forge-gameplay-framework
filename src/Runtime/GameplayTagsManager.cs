@@ -21,6 +21,8 @@ public class GameplayTagsManager
 
 	private bool _networkIndexInvalidated = true;
 
+	private ushort _invalidTagNetIndex;
+
 	/// <summary>
 	/// Gets the singleton instance of the <see cref="GameplayTagsManager"/>.
 	/// </summary>
@@ -30,6 +32,16 @@ public class GameplayTagsManager
 	/// Gets the roots <see cref="GameplayTagNode"/> of gameplay tag nodes.
 	/// </summary>
 	public GameplayTagNode RootNode { get; private set; } = new ();
+
+	/// <summary>
+	/// Gets the number of <see cref="GameplayTagNode"/> registered in this manager.
+	/// </summary>
+	public int NodesCount => _gameplayTagNodeMap.Count;
+
+	/// <summary>
+	/// Gets the numbers of bits to use for replicating container size.
+	/// </summary>
+	public int NumBitsForContainerSize { get; } = 6;
 
 	private GameplayTagsManager()
 	{
@@ -229,12 +241,10 @@ public class GameplayTagsManager
 			return possibleTag;
 		}
 
-#if DEBUG
 		if (errorIfNotFound)
 		{
-			throw new GameplayTagNotFoundException(tagName);
+			throw new Exception($"GameplayTag for TagName '{tagName}' could not be found within the tags tree.");
 		}
-#endif
 
 		return GameplayTag.EmptyTag;
 	}
@@ -304,7 +314,7 @@ public class GameplayTagsManager
 			validationCopy.UnionWith(gameplayTag.ParseParentTags());
 			System.Diagnostics.Debug.Assert(
 				validationCopy.SetEquals(uniqueParentTags),
-				$"ExtractParentTags results are inconsistent for tag {gameplayTag}");
+				$"ExtractParentTags results are inconsistent for tag [{gameplayTag}]");
 #endif
 		}
 		//// Should not clear invalid tags
@@ -351,8 +361,7 @@ public class GameplayTagsManager
 			return gameplayTagNode.NetIndex;
 		}
 
-		return ushort.MaxValue;
-		//return InvalidTagNetIndex;
+		return _invalidTagNetIndex;
 	}
 
 	/// <summary>
@@ -368,7 +377,12 @@ public class GameplayTagsManager
 		if (tagIndex >= _networkGameplayTagNodeIndex.Count)
 		{
 			// Ensure Index is the invalid index. If its higher than that, then something is wrong.
-			throw new Exception($"Received invalid tag net index {tagIndex}! Tag index is out of sync on client!");
+			if (tagIndex != _invalidTagNetIndex)
+			{
+				throw new Exception($"Received invalid tag net index {tagIndex}! Tag index is out of sync on client!");
+			}
+
+			return TagName.Empty;
 		}
 
 		return _networkGameplayTagNodeIndex[tagIndex].CompleteTagName;
@@ -617,15 +631,22 @@ public class GameplayTagsManager
 
 		_networkGameplayTagNodeIndex.Sort();
 
+		checked
+		{
+			_invalidTagNetIndex = (ushort)(_networkGameplayTagNodeIndex.Count + 1);
+		}
+
 		// Should make some checks.
-		// Then move commonly replicated tags to the beginning.
+		// Then move commonly replicated tags to the beginning for optimization.
+		// For now I'm naively serializing everything as is.
 		for (ushort i = 0; i < _networkGameplayTagNodeIndex.Count; ++i)
 		{
 			if (_networkGameplayTagNodeIndex[i] is not null)
 			{
 				_networkGameplayTagNodeIndex[i].NetIndex = i;
-
-				Console.WriteLine($"Assigning NetIndex {i} to Tag {_networkGameplayTagNodeIndex[i].CompleteTagName}");
+#if DEBUG
+				Debug.WriteLine($"Assigning NetIndex {i} to Tag {_networkGameplayTagNodeIndex[i].CompleteTagName}");
+#endif
 			}
 			else
 			{

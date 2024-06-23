@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace GameplayTags.Runtime;
 
 /// <summary>
@@ -47,9 +45,10 @@ public class QueryEvaluator
 			returnValue = EvaluateExpression(container);
 		}
 
-		Debug.Assert(
-			_curStreamIdx == _query.QueryTokenStream.Count,
-			"There shouldn't be remaining tokens into the stream.");
+		if (_curStreamIdx != _query.QueryTokenStream.Count)
+		{
+			throw new Exception("There shouldn't be remaining tokens into the stream.");
+		}
 
 		return returnValue;
 	}
@@ -81,7 +80,7 @@ public class QueryEvaluator
 				return EvaluateNoExpressionsMatch(tags, skip);
 		}
 
-		Debug.Fail("Code should not reach this point.");
+		System.Diagnostics.Debug.Fail("Code should not reach this point.");
 
 		return false;
 	}
@@ -309,7 +308,7 @@ public class QueryEvaluator
 		}
 
 		_readError = true;
-		Debug.Fail("Error parsing GameplayTagQuery! Code should not reach this point.");
+		System.Diagnostics.Debug.Fail("Error parsing GameplayTagQuery! Code should not reach this point.");
 
 		return 0;
 	}

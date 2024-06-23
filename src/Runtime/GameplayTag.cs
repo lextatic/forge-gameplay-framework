@@ -12,7 +12,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 	/// <remarks>
 	/// Generally used for tag validation.
 	/// </remarks>
-	public static GameplayTag EmptyTag => default;
+	public static GameplayTag EmptyTag { get; } = new (TagName.Empty);
 
 	/// <summary>
 	/// Gets the <see cref="GameplayTags.Runtime.TagName"/> representing this tag.
@@ -79,7 +79,7 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 		// This should actually change the TagName, so... no read-only?
 		var tagName = GameplayTagsManager.Instance.GetTagNameFromNetIndex(netIndex[0]);
 
-		gameplayTag = GameplayTagsManager.Instance.RequestGameplayTag(tagName, true);
+		gameplayTag = GameplayTagsManager.Instance.RequestGameplayTag(tagName, false);
 
 		return true;
 	}
@@ -114,11 +114,10 @@ public readonly struct GameplayTag : IEquatable<GameplayTag>
 			return tagNode.SingleTagContainer;
 		}
 
-#if DEBUG
+		// Tags at this point should always be invalid.
 		System.Diagnostics.Debug.Assert(
 			!IsValid,
-			$"{nameof(GameplayTag)}:{TagName} isn't properly registred in the {nameof(GameplayTagsManager)}.");
-#endif
+			$"Tag [{TagName}] isn't properly registred in the {nameof(GameplayTagsManager)}.");
 
 		return GameplayTagContainer.EmptyContainer;
 	}

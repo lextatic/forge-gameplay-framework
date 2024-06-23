@@ -6,14 +6,33 @@ namespace GameplayTags.Runtime;
 public class GameplayTagNode : IComparable<GameplayTagNode>
 {
 	/// <summary>
+	/// Invalid value for a tag NetIndex.
+	/// </summary>
+	public const ushort InvalidTagNetIndex = ushort.MaxValue;
+
+	private ushort _netIndex;
+
+	/// <summary>
 	/// Gets the raw name for this tag at current rank in the tree.
 	/// </summary>
 	public TagName TagName { get; }
 
 	/// <summary>
-	/// Gets or sets the net index of this node.
+	/// Gets the net index of this <see cref="GameplayTagNode"/>.
 	/// </summary>
-	public ushort NetIndex { get; set; }
+	public ushort NetIndex
+	{
+		get
+		{
+			System.Diagnostics.Debug.Assert(_netIndex != InvalidTagNetIndex, "NetIndex should never be invalid.");
+			return _netIndex;
+		}
+
+		internal set
+		{
+			_netIndex = value;
+		}
+	}
 
 	/// <summary>
 	/// Gets the parent <see cref="GameplayTagNode"/>, if any.
