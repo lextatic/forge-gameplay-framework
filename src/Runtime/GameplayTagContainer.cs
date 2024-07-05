@@ -13,7 +13,7 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 	/// <summary>
 	/// Gets an empty <see cref="GameplayTagContainer"/>.
 	/// </summary>
-	public static GameplayTagContainer EmptyContainer { get; } = new ();
+	public static GameplayTagContainer EmptyContainer => new ();
 
 	/// <summary>
 	/// Gets the set of <see cref="GameplayTag"/>s in this container.
@@ -109,7 +109,6 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 		var numTags = (byte)container.GameplayTags.Count;
 		var maxSize = (1 << GameplayTagsManager.Instance.NumBitsForContainerSize) - 1;
 
-		// throw
 		if (numTags > maxSize)
 		{
 			throw new Exception($"Container has {numTags} elements when max is {maxSize}!\n\nTags: {container}");
@@ -483,49 +482,25 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 	}
 
 	/// <summary>
-	/// Adds all the tags that match between the two specified containers to this container. WARNING: This matches any
-	/// parent tag in <paramref name="otherA"/>, not just exact matches! So while this should look like the union of the
-	/// container this is called on with the intersection of <paramref name="otherA"/> and <paramref name="otherB"/>,
-	/// it's not exactly that. Since <paramref name="otherB"/> matches against its parents,
-	/// any tag in <paramref name="otherA"/> which has a parent match with a direct tag of <paramref name="otherB"/>
-	/// will count. For example, if <paramref name="otherA"/> has 'Color.Green' and <paramref name="otherB"/> has
-	/// 'Color', that will count as a match due to the Color parent match.
-	/// </summary>
-	/// <remarks>
-	/// If you want an exact match, you need to call A.FilterExact(B) to get the intersection of A with B.
-	/// If you need the disjunctive union (the union of two sets minus their intersection), use AppendTags to create
-	/// Union, FilterExact to create Intersection, and then call Union.RemoveTags(Intersection).
-	/// </remarks>
-	/// <param name="otherA"> that has the matching tags you want to add to this
-	/// container, these tags have their parents expanded.</param>
-	/// <param name="otherB"><see cref="GameplayTagContainer"/> used to check for matching tags. If the tag matches on
-	/// any parent, it counts as a match.</param>
-	public void AppendMatchingTags(GameplayTagContainer otherA, GameplayTagContainer otherB)
-	{
-		foreach (var otherATag in otherA.GameplayTags)
-		{
-			if (otherATag.MatchesAny(otherB))
-			{
-				AddTag(otherATag);
-			}
-		}
-	}
-
-	/// <summary>
 	///  Returns a <see cref="string"/> representation of the <see cref="GameplayTagContainer"/>.
 	/// </summary>
 	/// <returns>The <see cref="GameplayTagContainer"/> as a <see cref="string"/>.</returns>
 	public readonly override string ToString()
 	{
+		if (IsEmpty)
+		{
+			return string.Empty;
+		}
+
 		var stringBuilder = new StringBuilder();
 
 		foreach (var tag in GameplayTags)
 		{
-			stringBuilder.Append($"\"{tag}\"");
+			stringBuilder.Append($"'{tag}'");
 			stringBuilder.Append(", ");
 		}
 
-		stringBuilder.Remove(GameplayTags.Count - 2, 2);
+		stringBuilder.Remove(stringBuilder.Length - 2, 2);
 
 		return stringBuilder.ToString();
 	}
@@ -550,7 +525,7 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 			return false;
 		}
 
-		return GameplayTags == container.GameplayTags;
+		return this == container;
 	}
 
 	/// <summary>

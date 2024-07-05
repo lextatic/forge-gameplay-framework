@@ -180,7 +180,7 @@ public class GameplayTagsManager
 	{
 		var parentTags = GetSingleTagContainer(gameplayTag);
 
-		if (parentTags != GameplayTagContainer.EmptyContainer)
+		if (!parentTags.IsEmpty)
 		{
 			return parentTags.GetExplicitGameplayTagParents();
 		}
