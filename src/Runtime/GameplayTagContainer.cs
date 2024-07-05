@@ -222,7 +222,7 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 
 		foreach (var tag in tagsToRemove)
 		{
-			changed = changed || GameplayTags.Remove(tag);
+			changed = GameplayTags.Remove(tag) || changed;
 		}
 
 		if (changed)
