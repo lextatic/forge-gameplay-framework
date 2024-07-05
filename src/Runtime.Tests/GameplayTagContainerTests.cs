@@ -917,9 +917,9 @@ public class GameplayTagContainerTests
 		var tagContainerB = new GameplayTagContainer(tagSetB);
 		var tagContainerC = new GameplayTagContainer(tagSetA);
 
-		//Assert.AreEqual(tagContainerA, tagContainerC);
-		//Assert.AreNotEqual(tagContainerA, tagContainerB);
-		//Assert.AreNotEqual(tagContainerB, tagContainerC);
+		Assert.AreEqual(tagContainerA, tagContainerC);
+		Assert.AreNotEqual(tagContainerA, tagContainerB);
+		Assert.AreNotEqual(tagContainerB, tagContainerC);
 
 		Assert.IsTrue(tagContainerA != tagContainerB);
 		Assert.IsTrue(tagContainerB != tagContainerC);
