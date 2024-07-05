@@ -233,24 +233,6 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 	}
 
 	/// <summary>
-	/// Fills in <see cref="ParentTags"/> from <see cref="GameplayTags"/>.
-	/// </summary>
-	public void FillParentTags()
-	{
-		ParentTags.Clear();
-
-		if (GameplayTags.Count > 0)
-		{
-			var tagsManager = GameplayTagsManager.Instance;
-
-			foreach (var tag in GameplayTags)
-			{
-				tagsManager.ExtractParentTags(tag, ParentTags);
-			}
-		}
-	}
-
-	/// <summary>
 	/// Remove all tags from the container. Will maintain slack by default.
 	/// </summary>
 	/// <param name="capacity">The desired initial capacity after the reset.</param>
@@ -630,6 +612,21 @@ public readonly struct GameplayTagContainer : IEnumerable<GameplayTag>
 		}
 
 		return resultContainer;
+	}
+
+	private void FillParentTags()
+	{
+		ParentTags.Clear();
+
+		if (GameplayTags.Count > 0)
+		{
+			var tagsManager = GameplayTagsManager.Instance;
+
+			foreach (var tag in GameplayTags)
+			{
+				tagsManager.ExtractParentTags(tag, ParentTags);
+			}
+		}
 	}
 
 	public static bool operator ==(GameplayTagContainer a, GameplayTagContainer b)
