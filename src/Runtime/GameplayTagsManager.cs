@@ -48,6 +48,20 @@ public class GameplayTagsManager
 	}
 
 	/// <summary>
+	/// Constructs a <see cref="GameplayTagNode"/> tree from a list of strings.
+	/// </summary>
+	/// <param name="tagsList">List of tags to initialize.</param>
+	public void ConstructGameplayTagTreeFromList(List<string> tagsList)
+	{
+		RootNode = new GameplayTagNode();
+
+		foreach (var tag in tagsList)
+		{
+			AddGameplayTagToTree(tag);
+		}
+	}
+
+	/// <summary>
 	/// Constructs a <see cref="GameplayTagNode"/> tree from a file where each line represents a single tag.
 	/// </summary>
 	/// <param name="filePath">Path to the file containing the tags.</param>
@@ -55,12 +69,7 @@ public class GameplayTagsManager
 	{
 		var content = File.ReadLines(filePath);
 
-		RootNode = new GameplayTagNode();
-
-		foreach (var line in content)
-		{
-			AddGameplayTagToTree(line);
-		}
+		ConstructGameplayTagTreeFromList(content.ToList());
 	}
 
 	/// <summary>
