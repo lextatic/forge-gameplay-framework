@@ -1,0 +1,27 @@
+# Godot 4+ specific ignores
+.godot/
+<<<<<<< ours
+=======
+<<<<<<< ours
+>>>>>>> theirs
+
+# Godot-specific ignores
+.import/
+export.cfg
+export_presets.cfg
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+# Mono-specific ignores
+.mono/
+data_*/
+mono_crash.*.json
+
+# C# specific
+.vs/
+<<<<<<< ours
+=======
+=======
+>>>>>>> theirs
+>>>>>>> theirs

@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://csx2canxmld7u"]
+
+[ext_resource type="PackedScene" uid="uid://bdlfuxjf8ogc3" path="res://tags.tscn" id="1_44rno"]
+[ext_resource type="Script" path="res://Main.cs" id="1_toki6"]
+
+[node name="Main" type="Node" node_paths=PackedStringArray("Tags1", "Tags2")]
+script = ExtResource("1_toki6")
+Tags1 = NodePath("Tags")
+Tags2 = NodePath("Tags2")
+
+[node name="Tags" parent="." instance=ExtResource("1_44rno")]
+
+[node name="Tags2" parent="." instance=ExtResource("1_44rno")]
+ContainerTags = ["1", "1.2", "1.2.3"]

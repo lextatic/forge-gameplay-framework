@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="RegisteredTags" load_steps=2 format=3 uid="uid://nvgjavs5dy3e"]
+
+[ext_resource type="Script" path="res://addons/gameplay_tags/RegisteredTags.cs" id="1_k63l6"]
+
+[resource]
+script = ExtResource("1_k63l6")
+Tags = ["a.1", "a.2", "b.1", "b.3", "1", "1.2", "1.3", "1.4", "1.5", "1.6", "1.7", "1.2.3"]
