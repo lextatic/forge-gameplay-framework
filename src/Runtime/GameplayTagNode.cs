@@ -1,3 +1,7 @@
+using System.Linq;
+using System;
+using System.Xml.Linq;
+
 namespace GameplayTags.Runtime;
 
 /// <summary>
@@ -15,7 +19,7 @@ public class GameplayTagNode : IComparable<GameplayTagNode>
 	/// <summary>
 	/// Gets the raw name for this tag at current rank in the tree.
 	/// </summary>
-	public TagName TagName { get; }
+	public TagName TagName { get; private set; }
 
 	/// <summary>
 	/// Gets the net index of this <see cref="GameplayTagNode"/>.
@@ -37,7 +41,7 @@ public class GameplayTagNode : IComparable<GameplayTagNode>
 	/// <summary>
 	/// Gets the parent <see cref="GameplayTagNode"/>, if any.
 	/// </summary>
-	public GameplayTagNode? ParentTagNode { get; }
+	public GameplayTagNode? ParentTagNode { get; private set; }
 
 	/// <summary>
 	/// Gets this node's child <see cref="GameplayTagNode"/>s.

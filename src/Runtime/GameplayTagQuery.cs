@@ -211,7 +211,7 @@ public class GameplayTagQuery
 		_tokenStreamVersion = (int)GameplayTagQueryStreamVersion.LatestVersion;
 
 		// Reserve size here is arbitrary, goal is to minimizing reallocs while being respectful of mem usage.
-		QueryTokenStream = new(128);
+		QueryTokenStream = new (128);
 		_tagDictionary.Clear();
 
 		// Add stream version first.

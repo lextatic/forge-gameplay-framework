@@ -27,21 +27,16 @@ public class GameplayTagQueryTests
 				.AddExpression(new GameplayTagQueryExpression()
 					.AnyTagsMatch()
 						.AddTag("Color.Red")
-						.AddTag("Color.Blue")
-				)
+						.AddTag("Color.Blue"))
 				.AddExpression(new GameplayTagQueryExpression()
 					.NoExpressionsMatch()
 						.AddExpression(new GameplayTagQueryExpression()
 							.AllTagsMatch()
 								.AddTag("Color.Red")
-								.AddTag("Color.Blue")
-						)
+								.AddTag("Color.Blue"))
 						.AddExpression(new GameplayTagQueryExpression()
 							.AnyTagsMatch()
-								.AddTag("Color.Green")
-						)
-				)
-		);
+								.AddTag("Color.Green"))));
 
 		Assert.IsTrue(query.Matches(tagContainerA));
 		Assert.IsTrue(query.Matches(tagContainerB));

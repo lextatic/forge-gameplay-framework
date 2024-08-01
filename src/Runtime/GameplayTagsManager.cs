@@ -73,6 +73,16 @@ public class GameplayTagsManager
 	}
 
 	/// <summary>
+	/// Helper function to destroy the gameplay tag tree.
+	/// </summary>
+	public void DestroyGameplayTagTree()
+	{
+		_gameplayTagNodeMap.Clear();
+		_networkGameplayTagNodeIndex.Clear();
+		_networkIndexInvalidated = true;
+	}
+
+	/// <summary>
 	/// Gets a <see cref="GameplayTagContainer"/> of all registered tags.
 	/// </summary>
 	/// <remarks>Setting <paramref name="onlyIncludeDictionaryTags"/> will exclude implicitly added tags if possible.
@@ -81,7 +91,7 @@ public class GameplayTagsManager
 	/// <returns>A <see cref="GameplayTagContainer"/> of all registered tags.</returns>
 	public GameplayTagContainer RequestAllGameplayTags(bool onlyIncludeDictionaryTags)
 	{
-		GameplayTagContainer tagContainer = default;
+		GameplayTagContainer tagContainer = new ();
 
 		foreach (var nodePair in _gameplayTagNodeMap)
 		{

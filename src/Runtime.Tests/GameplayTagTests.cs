@@ -139,6 +139,7 @@ public class GameplayTagTests
 			out var _);
 	}
 
+#if DEBUG
 	[TestMethod]
 	[TestCategory("IsValidGameplayTagString")]
 	public void Correctly_formatted_strings_should_be_valid_tag_names()
@@ -157,6 +158,7 @@ public class GameplayTagTests
 		Assert.IsFalse(isValid);
 		Assert.IsTrue(outFixedString == "Entity_Attr_ibutes_Strength");
 	}
+#endif
 
 	[TestMethod]
 	[TestCategory("GetSingleTagContainer")]
@@ -291,6 +293,7 @@ public class GameplayTagTests
 		Assert.IsTrue(directParent == tag.GetSingleTagContainer());
 	}
 
+#if DEBUG
 	[TestMethod]
 	[TestCategory("ParseParentTags")]
 	public void Parse_parents_result_should_parse_parents_correctly()
@@ -317,6 +320,7 @@ public class GameplayTagTests
 
 		Assert.IsTrue(directParent.Count == 0);
 	}
+#endif
 
 	[TestMethod]
 	[TestCategory("MatchesTag")]
