@@ -308,6 +308,9 @@ dotnet_diagnostic.SA1201.severity = none
 # SA1200: Using directives should be placed correctly
 dotnet_diagnostic.SA1200.severity = none
 
+# SA1000: Enum elements should be documented
+dotnet_diagnostic.SA1000.severity = none
+
 # SA1602: Enum elements should be documented
 dotnet_diagnostic.SA1602.severity = none
 
