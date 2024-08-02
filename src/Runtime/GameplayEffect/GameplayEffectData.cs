@@ -7,7 +7,7 @@ namespace GameplayTags.Runtime.GameplayEffect;
 public struct Modifier
 {
 	public TagName Attribute;
-	public float Value;
+	public int Value;
 }
 
 public class GameplayEffectData
@@ -99,7 +99,7 @@ public class GameplayEffectsManager
 
 			foreach (var modifier in spec.EffectData.Modifiers)
 			{
-				_attributeSet.AttributesMap[modifier.Attribute].AddModifier(modifier.Value);
+				_attributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value);
 			}
 		}
 		else
@@ -114,7 +114,7 @@ public class GameplayEffectsManager
 				//attribute.AddBaseValue(newValue);
 				//_attributeSet.PostAttributeBaseChange(attribute, oldValue, newValue);
 
-				attribute.AddBaseValue(modifier.Value);
+				attribute.AddToBaseValue(modifier.Value);
 			}
 		}
 	}

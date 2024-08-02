@@ -29,8 +29,7 @@ public abstract class AttributeSet
 				property.SetValue(this, attributeInstance);
 				AttributesMap.Add(TagName.FromString(attributeName), attributeInstance);
 
-				attributeInstance.OnPreBaseValueChange += PreAttributeBaseChange;
-				attributeInstance.OnPostBaseValueChange += PostAttributeBaseChange;
+				attributeInstance.OnValueChange += OnAttributeValueChangeHandler;
 			}
 		}
 	}
@@ -39,13 +38,7 @@ public abstract class AttributeSet
 
 	public virtual void PostGameplayEffectExecute() { }
 
-	public virtual void PreAttributeBaseChange(Attribute attribute, ref float newValue) { }
-
-	public virtual void PostAttributeBaseChange(Attribute attribute, float oldValue, float newValue) { }
-
-	public virtual void PreAttributeModifierChange(Attribute attribute, ref float newValue) { }
-
-	public virtual void PostAttributeModifierChange(Attribute attribute, ref float newValue) { }
+	public virtual void OnAttributeValueChangeHandler(Attribute attribute, int change) { }
 }
 
 public class PlayerAttributeSet : AttributeSet
@@ -77,13 +70,37 @@ public class ResourceAttributeSet : AttributeSet
 
 	public Attribute MaxStamina { get; set; }
 
-	public override void PreAttributeBaseChange(Attribute attribute, ref float newValue)
-	{
-		base.PreAttributeBaseChange(attribute, ref newValue);
+	public Attribute Vit { get; set; }
 
-		if (attribute == Health)
+	public override void OnAttributeValueChangeHandler(Attribute attribute, int change)
+	{
+		base.OnAttributeValueChangeHandler(attribute, change);
+
+		if (attribute == Vit && change != 0)
 		{
-			newValue = Math.Clamp(newValue, 0, MaxHealth.TotalValue);
+			// Do health to vit calculations here.
+		}
+
+		if (attribute == MaxHealth && change != 0)
+		{
+			Health.SetMaxValue(MaxHealth.TotalValue);
+		}
+
+		if (attribute == Health && change != 0)
+		{
+			if (change < 0)
+			{
+				Console.WriteLine($"Damage: {change}");
+
+				if (Health.TotalValue <= 0)
+				{
+					Console.WriteLine("Death");
+				}
+			}
+			else
+			{
+				Console.WriteLine($"Healing: {change}");
+			}
 		}
 	}
 }
