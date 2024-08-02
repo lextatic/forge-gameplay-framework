@@ -9,21 +9,20 @@ public class AttributeTests
 	[TestMethod]
 	public void AttributesTests()
 	{
-		var strenghtAttribute = new Attribute.Attribute();
-		strenghtAttribute.AddBaseValue(10f);
+		var strenghtAttribute = new Attribute.Attribute(10, 1, 99);
 
-		strenghtAttribute.AddModifier(5f);
-		strenghtAttribute.AddBaseValue(1f);
+		strenghtAttribute.ApplyModifier(5);
+		strenghtAttribute.SetBaseValue(11);
 
-		Assert.AreEqual(16f, strenghtAttribute.TotalValue);
+		Assert.AreEqual(16, strenghtAttribute.TotalValue);
 
-		strenghtAttribute.AddBaseValue(-2f);
+		strenghtAttribute.SetBaseValue(9);
 
-		Assert.AreEqual(14f, strenghtAttribute.TotalValue);
+		Assert.AreEqual(14, strenghtAttribute.TotalValue);
 
 		strenghtAttribute.Reset();
 
-		Assert.AreEqual(9f, strenghtAttribute.TotalValue);
+		Assert.AreEqual(9, strenghtAttribute.TotalValue);
 	}
 
 	[TestMethod]
@@ -31,10 +30,14 @@ public class AttributeTests
 	{
 		var resourceAttributes = new ResourceAttributeSet();
 
-		resourceAttributes.MaxHealth.AddBaseValue(10);
+		resourceAttributes.MaxHealth.SetBaseValue(10);
 
-		resourceAttributes.Health.AddBaseValue(12);
+		resourceAttributes.Health.SetBaseValue(12);
 
-		Assert.AreEqual(10f, resourceAttributes.Health.TotalValue);
+		Assert.AreEqual(10, resourceAttributes.Health.TotalValue);
+
+		resourceAttributes.Health.ApplyModifier(4);
+
+		Assert.AreEqual(10, resourceAttributes.Health.TotalValue);
 	}
 }
