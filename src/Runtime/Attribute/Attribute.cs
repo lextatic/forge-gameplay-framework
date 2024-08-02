@@ -4,72 +4,85 @@ namespace GameplayTags.Runtime.Attribute;
 
 public class Attribute
 {
-	internal delegate void PreAttributeChangeDelegate(Attribute attribute, ref float newValue);
+	// Should it be triggered with no changes?
+	internal event Action<Attribute, int>? OnValueChange;
 
-	internal event PreAttributeChangeDelegate OnPreBaseValueChange;
+	public int BaseValue { get; private set; }
 
-	internal event Action<Attribute, float, float> OnPostBaseValueChange;
+	public int ModifierValue { get; private set; }
 
-	internal event PreAttributeChangeDelegate OnPreModifierValueChange;
+	public int MaxValue { get; private set; }
 
-	internal event Action<Attribute, float, float> OnPostModifierValueChange;
+	public int MinValue { get; private set; }
 
-	public float BaseValue{ get; private set; }
+	// Could cache for performance
+	public int TotalValue => Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
 
-	public float ModifierValue => TotalValue - BaseValue;
+	public Attribute()
+	{
+		BaseValue = 0;
+		MinValue = int.MinValue;
+		MaxValue = int.MaxValue;
+		ModifierValue = 0;
+	}
 
-	public float TotalValue { get; private set; }
+	public Attribute(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
+	{
+		BaseValue = defaultValue;
+		MinValue = minValue;
+		MaxValue = maxValue;
+		ModifierValue = 0;
+	}
 
 	internal void Reset()
 	{
-		TotalValue = BaseValue;
+		ModifierValue = 0;
 	}
 
-	internal void SetBaseValue(float newValue)
+	internal void SetMaxValue(int newMaxValue)
 	{
-		float oldValue = BaseValue;
-		OnPreBaseValueChange?.Invoke(this, ref newValue);
+		int oldValue = TotalValue;
 
-		BaseValue = newValue;
-		TotalValue += newValue - oldValue;
+		MaxValue = Math.Max(newMaxValue, MinValue);
+		BaseValue = Math.Min(BaseValue, MaxValue);
 
-		OnPostBaseValueChange(this, oldValue, newValue);
+		OnValueChange?.Invoke(this, TotalValue - oldValue);
 	}
 
-	internal void SetTotalValue(float newValue)
+	internal void SetMinValue(int newMinValue)
 	{
-		float oldValue = TotalValue;
-		OnPreModifierValueChange?.Invoke(this, ref newValue);
+		int oldValue = TotalValue;
 
-		TotalValue = newValue;
+		MinValue = Math.Min(newMinValue, MaxValue);
+		BaseValue = Math.Max(BaseValue, MinValue);
 
-		OnPostModifierValueChange(this, oldValue, newValue);
+		OnValueChange?.Invoke(this, TotalValue - oldValue);
 	}
 
-	internal void AddBaseValue(float value)
+	internal void SetBaseValue(int newValue)
 	{
-		float oldValue = BaseValue;
-		float newValue = BaseValue + value;
-		OnPreBaseValueChange?.Invoke(this, ref newValue);
+		int oldValue = TotalValue;
 
-		var change = newValue - oldValue;
+		BaseValue = Math.Clamp(newValue, MinValue, MaxValue);
 
-		BaseValue += change;
-		TotalValue += change;
-
-		OnPostBaseValueChange(this, oldValue, newValue);
+		OnValueChange?.Invoke(this, TotalValue - oldValue);
 	}
 
-	internal void AddModifier(float value)
+	internal void AddToBaseValue(int value)
 	{
-		float oldValue = TotalValue;
-		float newValue = TotalValue + value;
-		OnPreModifierValueChange?.Invoke(this, ref newValue);
+		int oldValue = TotalValue;
 
-		var change = newValue - oldValue;
+		BaseValue = Math.Clamp(BaseValue + value, MinValue, MaxValue);
 
-		TotalValue += change;
+		OnValueChange?.Invoke(this, TotalValue - oldValue);
+	}
 
-		OnPostModifierValueChange(this, oldValue, newValue);
+	internal void ApplyModifier(int value)
+	{
+		int oldValue = TotalValue;
+
+		ModifierValue += value;
+
+		OnValueChange?.Invoke(this, TotalValue - oldValue);
 	}
 }
