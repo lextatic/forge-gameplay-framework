@@ -4,8 +4,7 @@ namespace GameplayTags.Runtime.Attribute;
 
 public class Attribute
 {
-	// Should it be triggered with no changes?
-	internal event Action<Attribute, int>? OnValueChange;
+	internal event Action<Attribute, int>? OnValueChanged;
 
 	public int BaseValue { get; private set; }
 
@@ -15,8 +14,7 @@ public class Attribute
 
 	public int MinValue { get; private set; }
 
-	// Could cache for performance
-	public int TotalValue => Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+	public int TotalValue { get; private set; }
 
 	public Attribute()
 	{
@@ -24,6 +22,7 @@ public class Attribute
 		MinValue = int.MinValue;
 		MaxValue = int.MaxValue;
 		ModifierValue = 0;
+		TotalValue = 0;
 	}
 
 	public Attribute(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
@@ -32,6 +31,7 @@ public class Attribute
 		MinValue = minValue;
 		MaxValue = maxValue;
 		ModifierValue = 0;
+		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
 	}
 
 	internal void Reset()
@@ -46,7 +46,12 @@ public class Attribute
 		MaxValue = Math.Max(newMaxValue, MinValue);
 		BaseValue = Math.Min(BaseValue, MaxValue);
 
-		OnValueChange?.Invoke(this, TotalValue - oldValue);
+		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
 	}
 
 	internal void SetMinValue(int newMinValue)
@@ -56,7 +61,12 @@ public class Attribute
 		MinValue = Math.Min(newMinValue, MaxValue);
 		BaseValue = Math.Max(BaseValue, MinValue);
 
-		OnValueChange?.Invoke(this, TotalValue - oldValue);
+		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
 	}
 
 	internal void SetBaseValue(int newValue)
@@ -65,7 +75,12 @@ public class Attribute
 
 		BaseValue = Math.Clamp(newValue, MinValue, MaxValue);
 
-		OnValueChange?.Invoke(this, TotalValue - oldValue);
+		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
 	}
 
 	internal void AddToBaseValue(int value)
@@ -74,7 +89,12 @@ public class Attribute
 
 		BaseValue = Math.Clamp(BaseValue + value, MinValue, MaxValue);
 
-		OnValueChange?.Invoke(this, TotalValue - oldValue);
+		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
 	}
 
 	internal void ApplyModifier(int value)
@@ -83,6 +103,11 @@ public class Attribute
 
 		ModifierValue += value;
 
-		OnValueChange?.Invoke(this, TotalValue - oldValue);
+		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
 	}
 }

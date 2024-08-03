@@ -29,7 +29,7 @@ public abstract class AttributeSet
 				property.SetValue(this, attributeInstance);
 				AttributesMap.Add(TagName.FromString(attributeName), attributeInstance);
 
-				attributeInstance.OnValueChange += OnAttributeValueChangeHandler;
+				attributeInstance.OnValueChanged += OnAttributeValueChangeHandler;
 			}
 		}
 	}
@@ -76,17 +76,17 @@ public class ResourceAttributeSet : AttributeSet
 	{
 		base.OnAttributeValueChangeHandler(attribute, change);
 
-		if (attribute == Vit && change != 0)
+		if (attribute == Vit)
 		{
 			// Do health to vit calculations here.
 		}
 
-		if (attribute == MaxHealth && change != 0)
+		if (attribute == MaxHealth)
 		{
 			Health.SetMaxValue(MaxHealth.TotalValue);
 		}
 
-		if (attribute == Health && change != 0)
+		if (attribute == Health)
 		{
 			if (change < 0)
 			{
