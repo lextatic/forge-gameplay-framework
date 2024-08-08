@@ -1,14 +1,19 @@
 #pragma warning disable SA1600
-
 namespace GameplayTags.Runtime.Attribute;
 
-public class Attribute
+public sealed class Attribute
 {
-	internal event Action<Attribute, int>? OnValueChanged;
+	public event Action<Attribute, int>? OnValueChanged;
 
 	public int BaseValue { get; private set; }
 
-	public int ModifierValue { get; private set; }
+	/// <summary>
+	/// Gets the total modifier value kept so we can make Status Effect application consise, but this value could be
+	/// clamped and thus having an invalid part.
+	/// </summary>
+	public int TotalModifierValue { get; private set; }
+
+	public int ValidModifierValue { get; private set; }
 
 	public int MaxValue { get; private set; }
 
@@ -16,37 +21,54 @@ public class Attribute
 
 	public int TotalValue { get; private set; }
 
-	public Attribute()
+	internal Attribute()
 	{
-		BaseValue = 0;
 		MinValue = int.MinValue;
 		MaxValue = int.MaxValue;
-		ModifierValue = 0;
+		BaseValue = 0;
+		TotalModifierValue = 0;
+		ValidModifierValue = 0;
 		TotalValue = 0;
 	}
 
-	public Attribute(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
+	internal void Initialize(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
 	{
-		BaseValue = defaultValue;
+		if (minValue > maxValue)
+		{
+			// Do I expect it to be handled somehow? No
+			// Should it be an Assert then? (Yea, probably...)
+			throw new ArgumentException("MinValue cannot be greater than MaxValue.");
+		}
+
+		if (defaultValue < minValue || defaultValue > maxValue)
+		{
+			throw new ArgumentException("DefaultValue should be withing MinValue and MaxValue.");
+		}
+
 		MinValue = minValue;
 		MaxValue = maxValue;
-		ModifierValue = 0;
-		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
-	}
-
-	internal void Reset()
-	{
-		ModifierValue = 0;
+		BaseValue = defaultValue;
+		TotalModifierValue = 0;
+		ValidModifierValue = 0;
+		TotalValue = BaseValue;
 	}
 
 	internal void SetMaxValue(int newMaxValue)
 	{
+		// Do I expect it to be handled somehow? (This one though... it could happen in runtime)
+		// Or should I fix it right now? (I don't think so...)
+		// Should I warn if so? (Since I won't fix, I won't notify)
+		// Should it be an Assert then? (Yea, probably... but maybe an exception)
+		if (newMaxValue < MinValue)
+		{
+			throw new ArgumentException("MaxValue cannot be lower than MinValue.");
+		}
+
 		int oldValue = TotalValue;
 
-		MaxValue = Math.Max(newMaxValue, MinValue);
 		BaseValue = Math.Min(BaseValue, MaxValue);
 
-		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+		UpdateCachedValues();
 
 		if (TotalValue != oldValue)
 		{
@@ -56,12 +78,16 @@ public class Attribute
 
 	internal void SetMinValue(int newMinValue)
 	{
+		if (newMinValue > MaxValue)
+		{
+			throw new ArgumentException("MinValue cannot be lower than MaxValue.");
+		}
+
 		int oldValue = TotalValue;
 
-		MinValue = Math.Min(newMinValue, MaxValue);
 		BaseValue = Math.Max(BaseValue, MinValue);
 
-		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+		UpdateCachedValues();
 
 		if (TotalValue != oldValue)
 		{
@@ -75,7 +101,7 @@ public class Attribute
 
 		BaseValue = Math.Clamp(newValue, MinValue, MaxValue);
 
-		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+		UpdateCachedValues();
 
 		if (TotalValue != oldValue)
 		{
@@ -89,7 +115,7 @@ public class Attribute
 
 		BaseValue = Math.Clamp(BaseValue + value, MinValue, MaxValue);
 
-		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+		UpdateCachedValues();
 
 		if (TotalValue != oldValue)
 		{
@@ -101,13 +127,19 @@ public class Attribute
 	{
 		int oldValue = TotalValue;
 
-		ModifierValue += value;
+		TotalModifierValue += value;
 
-		TotalValue = Math.Clamp(BaseValue + ModifierValue, MinValue, MaxValue);
+		UpdateCachedValues();
 
 		if (TotalValue != oldValue)
 		{
 			OnValueChanged?.Invoke(this, TotalValue - oldValue);
 		}
+	}
+
+	private void UpdateCachedValues()
+	{
+		TotalValue = Math.Clamp(BaseValue + TotalModifierValue, MinValue, MaxValue);
+		ValidModifierValue = TotalValue - BaseValue;
 	}
 }
