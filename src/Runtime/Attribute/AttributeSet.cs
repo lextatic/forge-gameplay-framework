@@ -1,4 +1,5 @@
 #pragma warning disable SA1600 // Elements should be documented
+using System;
 using System.Reflection;
 
 namespace GameplayTags.Runtime.Attribute;
@@ -15,92 +16,61 @@ public abstract class AttributeSet
 	/// </summary>
 	protected AttributeSet()
 	{
-		var className = GetType().Name;
-		var properties = GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-							  .Where(f => f.PropertyType == typeof(Attribute));
+		// Fetch fields of type Attribute
+		var fields = GetType().GetFields(BindingFlags.Public | BindingFlags.Instance)
+									  .Where(f => f.FieldType == typeof(Attribute));
 
-		AttributesMap = new Dictionary<TagName, Attribute>(properties.Count());
+		AttributesMap = new Dictionary<TagName, Attribute>(fields.Count());
 
-		foreach (var property in properties)
+		foreach (var field in fields)
 		{
-			var attributeName = $"{className}.{property.Name}";
-			if (Activator.CreateInstance(property.PropertyType) is Attribute attributeInstance)
-			{
-				property.SetValue(this, attributeInstance);
-				AttributesMap.Add(TagName.FromString(attributeName), attributeInstance);
+			var attributeName = $"{GetType().Name}.{field.Name}";
 
-				attributeInstance.OnValueChanged += OnAttributeValueChangeHandler;
+			// Create an instance of the Attribute class
+			if (Activator.CreateInstance(field.FieldType, true) is Attribute attributeInstance)
+			{
+				// Set the value using the field
+				field.SetValue(this, attributeInstance);
+
+				AttributesMap.Add(TagName.FromString(attributeName), attributeInstance);
+				attributeInstance.OnValueChanged += Attribute_OnValueChanged;
 			}
 		}
+
+		InitializeAttributes();
 	}
 
-	public virtual void PreGameplayEffectExecute() { }
+	// Use this method to initialize all attributes
+	protected abstract void InitializeAttributes();
 
-	public virtual void PostGameplayEffectExecute() { }
+	protected virtual void PreGameplayEffectExecute() { }
 
-	public virtual void OnAttributeValueChangeHandler(Attribute attribute, int change) { }
-}
+	protected virtual void PostGameplayEffectExecute() { }
 
-public class PlayerAttributeSet : AttributeSet
-{
-	public Attribute Strength { get; set; }
+	protected virtual void Attribute_OnValueChanged(Attribute attribute, int change) { }
 
-	public Attribute Intelligence { get; set; }
-
-	public Attribute Dexterity { get; set; }
-
-	public Attribute Vitality { get; set; }
-
-	public Attribute Agility { get; set; }
-
-	public Attribute Luck { get; set; }
-}
-
-public class ResourceAttributeSet : AttributeSet
-{
-	public Attribute Health { get; set; }
-
-	public Attribute MaxHealth { get; set; }
-
-	public Attribute Mana { get; set; }
-
-	public Attribute MaxMana { get; set; }
-
-	public Attribute Stamina { get; set; }
-
-	public Attribute MaxStamina { get; set; }
-
-	public Attribute Vit { get; set; }
-
-	public override void OnAttributeValueChangeHandler(Attribute attribute, int change)
+	protected void InitializeAttribute(Attribute attribute, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
 	{
-		base.OnAttributeValueChangeHandler(attribute, change);
+		attribute.Initialize(defaultValue, minValue, maxValue);
+	}
 
-		if (attribute == Vit)
-		{
-			// Do health to vit calculations here.
-		}
+	protected void SetAttributeMaxValue(Attribute attribute, int maxValue)
+	{
+		attribute.SetMaxValue(maxValue);
+	}
 
-		if (attribute == MaxHealth)
-		{
-			Health.SetMaxValue(MaxHealth.TotalValue);
-		}
+	protected void SetAttributeMinValue(Attribute attribute, int minValue)
+	{
+		attribute.SetMinValue(minValue);
+	}
 
-		if (attribute == Health)
-		{
-			if (change < 0)
-			{
-				Console.WriteLine($"Damage: {change}");
+	protected void SetAttributeBaseValue(Attribute attribute, int newValue)
+	{
+		attribute.SetBaseValue(newValue);
+	}
 
-				if (Health.TotalValue <= 0)
-				{
-					Console.WriteLine("Death");
-				}
-			}
-			else
-			{
-				Console.WriteLine($"Healing: {change}");
-			}
-		}
+	protected void AddToAttributeBaseValue(Attribute attribute, int value)
+	{
+		attribute.AddToBaseValue(value);
 	}
 }
