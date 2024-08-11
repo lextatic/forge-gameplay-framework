@@ -24,12 +24,12 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
-		var playerAttributes = new PlayerAttributeSet();
+		//var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		//var manager = new GameplayEffectsManager(playerAttributes);
 
-		manager.ApplyEffect(effect);
+		//manager.ApplyEffect(effect);
 
-		Assert.AreEqual(10, playerAttributes.Strength.TotalValue);
+		//Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 	}
 }

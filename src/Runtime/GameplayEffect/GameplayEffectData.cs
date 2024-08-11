@@ -1,5 +1,4 @@
 using GameplayTags.Runtime.Attribute;
-using System;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
@@ -10,6 +9,25 @@ public struct Modifier
 	public int Value;
 }
 
+public enum DurationType : byte
+{
+	Instant,
+	Infinite,
+	HasDuration,
+}
+
+public struct DurationData
+{
+	public DurationType Type;
+	public float Duration;
+}
+
+public struct PeriodicData
+{
+	public float Period;
+	public bool ExecuteOnApplication;
+}
+
 public class GameplayEffectData
 {
 	public List<Modifier> Modifiers { get; } = new ();
@@ -18,14 +36,32 @@ public class GameplayEffectData
 
 	public float BaseMagnitude { get; }
 
-	public float Duration { get; }
+	public DurationData DurationData { get; }
 
+	public PeriodicData? PeriodicData { get; }
 
-	public GameplayEffectData(string name, float baseMagnitude, float duration)
+	public GameplayEffectData(
+		string name,
+		float baseMagnitude,
+		DurationData durationData,
+		PeriodicData? periodicData)
 	{
 		Name = name;
 		BaseMagnitude = baseMagnitude;
-		Duration = duration;
+		DurationData = durationData;
+		PeriodicData = periodicData;
+
+		// Should I really throw? Or just ignore (force null) the periodic data?
+		if (periodicData.HasValue && durationData.Type == DurationType.Instant)
+		{
+			throw new Exception("Periodic effects can't be set as instant.");
+		}
+
+		// Should I really throw? Or just ignore (force null) the periodic data?
+		if (durationData.Type != DurationType.HasDuration && durationData.Duration != 0)
+		{
+			throw new Exception($"Can't set duration if DurationType is set to {durationData.Type}.");
+		}
 	}
 }
 
@@ -67,7 +103,7 @@ public class ActiveGameplayEffect
 	public ActiveGameplayEffect(GameplayEffect spec)
 	{
 		Spec = spec;
-		RemainingDuration = spec.EffectData.Duration;
+		RemainingDuration = spec.EffectData.DurationData.Duration;
 	}
 
 	public void Update(float deltaTime)
@@ -92,7 +128,7 @@ public class GameplayEffectsManager
 
 	public void ApplyEffect(GameplayEffect spec)
 	{
-		if (spec.EffectData.Duration > 0)
+		if (spec.EffectData.DurationData.Type != DurationType.Instant)
 		{
 			var activeEffect = new ActiveGameplayEffect(spec);
 			_activeEffects.Add(activeEffect);
@@ -100,25 +136,39 @@ public class GameplayEffectsManager
 			foreach (var modifier in spec.EffectData.Modifiers)
 			{
 				_attributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value);
+
+				if (spec.EffectData.PeriodicData.HasValue && spec.EffectData.PeriodicData.Value.ExecuteOnApplication)
+				{
+					ExecuteEffect(_attributeSet.AttributesMap[modifier.Attribute], modifier);
+				}
 			}
 		}
 		else
 		{
+			// This path is called "Execute" and should work for instant and periodic effects
 			foreach (var modifier in spec.EffectData.Modifiers)
 			{
-				var attribute = _attributeSet.AttributesMap[modifier.Attribute];
-				//var oldValue = attribute.BaseValue;
-				//var newValue = modifier.Value;
-
-				//_attributeSet.PreAttributeBaseChange(attribute, ref newValue);
-				//attribute.AddBaseValue(newValue);
-				//_attributeSet.PostAttributeBaseChange(attribute, oldValue, newValue);
-
-				attribute.AddToBaseValue(modifier.Value);
+				ExecuteEffect(_attributeSet.AttributesMap[modifier.Attribute], modifier);
 			}
 		}
 	}
 
+	private void ExecuteEffect(Attribute.Attribute attribute, Modifier modifier)
+	{
+		// Do some pre-evaluations about the modifier
+		
+		//if (attribute.PreGameplayEffectExecute(modifier))
+		//{
+			// This gives a chance for the AttributeSet and others to manipulate the modifier before applying
+		//}
+
+		// This is probably a bit more complicated than that as it should use the previously calculated evaluation
+		attribute.AddToBaseValue(modifier.Value);
+
+		//attribute.PostGameplayEffectExecute(modifier);
+	}
+
+	// What if the game is a turn based game?
 	public void UpdateEffects(float deltaTime)
 	{
 		foreach (var effect in _activeEffects)

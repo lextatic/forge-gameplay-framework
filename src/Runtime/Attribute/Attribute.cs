@@ -1,9 +1,28 @@
 #pragma warning disable SA1600
 namespace GameplayTags.Runtime.Attribute;
 
+public struct GameplayEffectModifier
+{
+	public GameplayEffect.GameplayEffect GameplayEffect;
+	public GameplayModifierEvaluatedData EvaluatedData;
+	public object Target;
+}
+
+public struct GameplayModifierEvaluatedData
+{
+	public Attribute Attribute;
+	public int ModifierOperation;
+	public int Magnitude;
+	public bool IsValid;
+}
+
 public sealed class Attribute
 {
 	public event Action<Attribute, int>? OnValueChanged;
+
+	public event Func<Attribute, GameplayEffectModifier, bool> OnPreGameplayEffectExecute;
+
+	public event Action<Attribute, GameplayEffectModifier>? OnPostGameplayEffectExecute;
 
 	public int BaseValue { get; private set; }
 
@@ -135,6 +154,21 @@ public sealed class Attribute
 		{
 			OnValueChanged?.Invoke(this, TotalValue - oldValue);
 		}
+	}
+
+	internal bool PreGameplayEffectExecute(GameplayEffectModifier modifier)
+	{
+		if (OnPreGameplayEffectExecute is null)
+		{
+			return false;
+		}
+
+		return OnPreGameplayEffectExecute.Invoke(this, modifier);
+	}
+
+	internal void PostGameplayEffectExecute(GameplayEffectModifier modifier)
+	{
+		OnPostGameplayEffectExecute?.Invoke(this, modifier);
 	}
 
 	private void UpdateCachedValues()
