@@ -22,7 +22,7 @@ public class GameplayEffectInstanceUE
 
 public class GameplayEffectDataUE
 {
-	public GameplayEffectDurationType DurationPolicy;
+	//public GameplayEffectDurationType DurationPolicy;
 
 	public GameplayEffectModifierMagnitude DurationMagnitude;
 
@@ -77,7 +77,7 @@ public class GameplayEffectDataUE
 
 	public GameplayEffectDataUE()
 	{
-		DurationPolicy = GameplayEffectDurationType.Instant;
+		//DurationPolicy = GameplayEffectDurationType.Instant;
 		ExecutePeriodicEffectOnApplication = true;
 		PeriodicInhibitionPolicy = GameplayEffectPeriodInhibitionRemovedPolicy.NeverReset;
 		StackingType = GameplayEffectStackingType.None;
