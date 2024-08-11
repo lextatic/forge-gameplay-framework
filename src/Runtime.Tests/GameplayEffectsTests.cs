@@ -80,6 +80,76 @@ public class GameplayEffectsTests
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
 		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
 		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+
+		// Simulate 5 seconds
+		for (int i = 0; i < 32 * 5; i++)
+		{
+			manager.UpdateEffects(0.03125f);
+		}
+
+		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+	}
+
+	[TestMethod]
+	public void Duration_effect_should_modify_attribute_modifier_value_and_expire_after_duration_time()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			10,
+			new DurationData
+			{
+				Type = DurationType.HasDuration,
+				Duration = 10,
+			},
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Value = 10,
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+
+		Assert.AreEqual(10, effect.GetScaledMagnitude());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+
+		// Simulate 5 seconds
+		for (int i = 0; i < 32 * 5; i++)
+		{
+			manager.UpdateEffects(0.03125f);
+		}
+
+		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+
+		// Simulate 5 more seconds
+		for (int i = 0; i < 32 * 5; i++)
+		{
+			manager.UpdateEffects(0.03125f);
+		}
+
+		Assert.AreEqual(1, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
 	}
 
 	private class PlayerAttributeSet : AttributeSet
