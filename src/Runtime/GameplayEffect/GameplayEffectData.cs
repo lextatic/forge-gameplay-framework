@@ -114,7 +114,8 @@ public class ActiveGameplayEffect
 
 	public float ExecutionCount { get; private set; }
 
-	public bool IsExpired => RemainingDuration <= 0;
+	public bool IsExpired => GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration &&
+		RemainingDuration <= 0;
 
 	public ActiveGameplayEffect(GameplayEffect gameplayEffect, AttributeSet targetAttributeSet)
 	{
@@ -130,8 +131,6 @@ public class ActiveGameplayEffect
 
 		foreach (var modifier in GameplayEffect.EffectData.Modifiers)
 		{
-			TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value);
-
 			if (GameplayEffect.EffectData.PeriodicData.HasValue)
 			{
 				if (GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
@@ -142,14 +141,21 @@ public class ActiveGameplayEffect
 
 				NextPeriodicTick = GameplayEffect.EffectData.PeriodicData.Value.Period;
 			}
+			else
+			{
+				TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value);
+			}
 		}
 	}
 
 	public void Unapply()
 	{
-		foreach (var modifier in GameplayEffect.EffectData.Modifiers)
+		if (!GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(-modifier.Value);
+			foreach (var modifier in GameplayEffect.EffectData.Modifiers)
+			{
+				TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(-modifier.Value);
+			}
 		}
 	}
 
@@ -168,11 +174,11 @@ public class ActiveGameplayEffect
 		if (GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration)
 		{
 			RemainingDuration -= deltaTime;
+		}
 
-			if (IsExpired)
-			{
-				Unapply();
-			}
+		if (IsExpired)
+		{
+			Unapply();
 		}
 	}
 }
@@ -199,7 +205,7 @@ public class GameplayEffectsManager
 		}
 		else
 		{
-			// This path is called "Execute" and should work for instant and periodic effects
+			// This path is called "Execute" and should work for instant effects
 			gameplayEffect.Execute(_attributeSet);
 		}
 	}
