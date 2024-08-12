@@ -3,6 +3,45 @@ using GameplayTags.Runtime.Attribute;
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
 
+public enum StackingType : byte
+{
+	AggregateBySource,
+	AggregateByTarget,
+}
+
+// Neeed if any Aggregate
+public enum StackingDurationPolicy : byte
+{
+	RefreshOnSuccessfulApplication,
+	NeverRefresh,
+}
+
+// Neeed if any Aggregate
+public enum StackingExpirationPolicy : byte
+{
+	ClearEntireStack,
+	RemoveSingleStackAndRefreshDuration,
+	/** The duration of the gameplay effect is refreshed. This essentially makes the effect infinite in duration. This can be used to manually handle stack decrements via OnStackCountChange callback */
+	RefreshDuration,
+}
+
+// Neeed if any Aggregate and PeriodData is existing
+// Could be in the StackingData ou PeriodicData
+public enum StackingPeriodPolicy : byte
+{
+	ResetOnSuccessfulApplication,
+	NeverReset,
+}
+
+public struct StackingData
+{
+	public StackingType Type;
+	public int StackLimit;
+	public StackingDurationPolicy DurationPolicy;
+	public StackingExpirationPolicy ExpirationPolicy;
+	public StackingPeriodPolicy? PeriodPolicy;
+}
+
 public struct Modifier
 {
 	public TagName Attribute;
@@ -38,17 +77,21 @@ public class GameplayEffectData
 
 	public DurationData DurationData { get; }
 
+	public StackingData? StackingData { get; }
+
 	public PeriodicData? PeriodicData { get; }
 
 	public GameplayEffectData(
 		string name,
 		float baseMagnitude,
 		DurationData durationData,
+		StackingData? stackingData,
 		PeriodicData? periodicData)
 	{
 		Name = name;
 		BaseMagnitude = baseMagnitude;
 		DurationData = durationData;
+		StackingData = stackingData;
 		PeriodicData = periodicData;
 
 		// Should I really throw? Or just ignore (force null) the periodic data?
@@ -61,6 +104,19 @@ public class GameplayEffectData
 		if (durationData.Type != DurationType.HasDuration && durationData.Duration != 0)
 		{
 			throw new Exception($"Can't set duration if DurationType is set to {durationData.Type}.");
+		}
+
+		if (stackingData.HasValue)
+		{
+			if (durationData.Type == DurationType.Instant)
+			{
+				throw new Exception("Instant effects can't have stacks.");
+			}
+
+			if (stackingData.Value.PeriodPolicy.HasValue != PeriodicData.HasValue)
+			{
+				throw new Exception("Both PeriodicData and PeriodPolicy must be either defined or undefined.");
+			}
 		}
 	}
 }

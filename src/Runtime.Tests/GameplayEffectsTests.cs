@@ -21,6 +21,7 @@ public class GameplayEffectsTests
 				Type = DurationType.Instant,
 				Duration = 0,
 			},
+			null,
 			null);
 
 		effectData.Modifiers.Add(new Modifier
@@ -58,6 +59,7 @@ public class GameplayEffectsTests
 				Type = DurationType.Infinite,
 				Duration = 0,
 			},
+			null,
 			null);
 
 		effectData.Modifiers.Add(new Modifier
@@ -106,6 +108,7 @@ public class GameplayEffectsTests
 				Type = DurationType.HasDuration,
 				Duration = 10,
 			},
+			null,
 			null);
 
 		effectData.Modifiers.Add(new Modifier
@@ -165,6 +168,7 @@ public class GameplayEffectsTests
 				Type = DurationType.Infinite,
 				Duration = 0,
 			},
+			null,
 			new PeriodicData
 			{
 				ExecuteOnApplication = true,
@@ -225,6 +229,7 @@ public class GameplayEffectsTests
 				Type = DurationType.HasDuration,
 				Duration = 3,
 			},
+			null,
 			new PeriodicData
 			{
 				ExecuteOnApplication = true,
