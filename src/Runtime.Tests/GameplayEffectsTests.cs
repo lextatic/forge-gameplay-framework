@@ -14,7 +14,7 @@ public class GameplayEffectsTests
 		var owner = new object();
 
 		var effectData = new GameplayEffectData(
-			"Buff",
+			"Level Up",
 			10,
 			new DurationData
 			{
@@ -273,6 +273,53 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(41, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(41, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+	}
+
+	[TestMethod]
+	public void Effect_should_stack_values()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			10,
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+				Duration = 0,
+			},
+			new StackingData
+			{
+				StackLimit = 5,
+				StackPolicy = StackPolicy.AggregateByTarget,
+				StackApplicationRefreshPolicy = StackApplicationRefreshPolicy.NeverRefresh,
+				StackRemovalPolicy = StackRemovalPolicy.ClearEntireStack,
+				StackLevelPolicy = StackLevelPolicy.AggregateByLevel,
+				StackLevelOverridePolicy = null,
+				StackApplicationResetPeriodPolicy = null,
+			},
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Value = 10,
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+
+		Assert.AreEqual(10, effect.GetScaledMagnitude());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
 		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
 		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
 	}

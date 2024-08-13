@@ -3,31 +3,39 @@ using GameplayTags.Runtime.Attribute;
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
 
-public enum StackingType : byte
+public enum StackPolicy : byte
 {
 	AggregateBySource,
 	AggregateByTarget,
 }
 
-// Neeed if any Aggregate
-public enum StackingDurationPolicy : byte
+public enum StackLevelPolicy : byte
+{
+	AggregateLevels,
+	SegregateLevels,
+}
+
+public enum StackLevelOverridePolicy : byte
+{
+	AlwaysKeep,
+	AlwaysOverride,
+	KeepHighest,
+	KeepLowest,
+}
+
+public enum StackApplicationRefreshPolicy : byte
 {
 	RefreshOnSuccessfulApplication,
 	NeverRefresh,
 }
 
-// Neeed if any Aggregate
-public enum StackingExpirationPolicy : byte
+public enum StackRemovalPolicy : byte
 {
 	ClearEntireStack,
 	RemoveSingleStackAndRefreshDuration,
-	/** The duration of the gameplay effect is refreshed. This essentially makes the effect infinite in duration. This can be used to manually handle stack decrements via OnStackCountChange callback */
-	RefreshDuration,
 }
 
-// Neeed if any Aggregate and PeriodData is existing
-// Could be in the StackingData ou PeriodicData
-public enum StackingPeriodPolicy : byte
+public enum StackApplicationResetPeriodPolicy : byte
 {
 	ResetOnSuccessfulApplication,
 	NeverReset,
@@ -35,11 +43,13 @@ public enum StackingPeriodPolicy : byte
 
 public struct StackingData
 {
-	public StackingType Type;
-	public int StackLimit;
-	public StackingDurationPolicy DurationPolicy;
-	public StackingExpirationPolicy ExpirationPolicy;
-	public StackingPeriodPolicy? PeriodPolicy;
+	public int StackLimit; // All stackable effects
+	public StackPolicy StackPolicy; // All stackable effects
+	public StackLevelPolicy StackLevelPolicy; // All stackable effects
+	public StackRemovalPolicy StackRemovalPolicy; // Aff stackable effects, infinite effects removal will count as expiration
+	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
+	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking = AggregateLevels
+	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
 }
 
 public struct Modifier
@@ -103,19 +113,34 @@ public class GameplayEffectData
 		// Should I really throw? Or just ignore (force null) the periodic data?
 		if (durationData.Type != DurationType.HasDuration && durationData.Duration != 0)
 		{
-			throw new Exception($"Can't set duration if DurationType is set to {durationData.Type}.");
+			throw new Exception($"Can't set duration if {nameof(DurationType)} is set to {durationData.Type}.");
 		}
 
 		if (stackingData.HasValue)
 		{
 			if (durationData.Type == DurationType.Instant)
 			{
-				throw new Exception("Instant effects can't have stacks.");
+				throw new Exception($"{DurationType.Instant} effects can't have stacks.");
 			}
 
-			if (stackingData.Value.PeriodPolicy.HasValue != PeriodicData.HasValue)
+			if (stackingData.Value.StackApplicationResetPeriodPolicy.HasValue != PeriodicData.HasValue)
 			{
-				throw new Exception("Both PeriodicData and PeriodPolicy must be either defined or undefined.");
+				throw new Exception($"Both {nameof(PeriodicData)} and {nameof(StackApplicationResetPeriodPolicy)} " +
+					$"must be either defined or undefined.");
+			}
+
+			if (stackingData.Value.StackLevelPolicy == StackLevelPolicy.AggregateLevels !=
+				stackingData.Value.StackLevelOverridePolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackLevelPolicy)} is set {StackLevelPolicy.AggregateLevels}, " +
+					$"{nameof(StackLevelOverridePolicy)} must be defined. And not defined if otherwise.");
+			}
+
+			if (durationData.Type == DurationType.HasDuration !=
+				stackingData.Value.StackApplicationRefreshPolicy.HasValue)
+			{
+				throw new Exception($"Effects set as {DurationType.HasDuration} must define " +
+					$" {nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");
 			}
 		}
 	}
