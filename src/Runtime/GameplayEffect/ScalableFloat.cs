@@ -1,8 +1,9 @@
-﻿namespace GameplayTags.Runtime.GameplayEffect;
+namespace GameplayTags.Runtime.GameplayEffect;
 
 public struct ScalableFloat
 {
 	public float BaseValue { get; set; }
+
 	public Curve ScalingCurve { get; set; }
 
 	public ScalableFloat(float baseValue)

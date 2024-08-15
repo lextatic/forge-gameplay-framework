@@ -15,7 +15,6 @@ public class GameplayEffectsTests
 
 		var effectData = new GameplayEffectData(
 			"Level Up",
-			10,
 			new DurationData
 			{
 				Type = DurationType.Instant,
@@ -27,12 +26,11 @@ public class GameplayEffectsTests
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
-			Value = 10,
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
-
-		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -47,13 +45,48 @@ public class GameplayEffectsTests
 	}
 
 	[TestMethod]
+	public void Higher_level_effect_should_apply_higher_level_modifier()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Level Up",
+			new DurationData
+			{
+				Type = DurationType.Instant,
+				Duration = 0,
+			},
+			null,
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 2, new GameplayEffectContext());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+	}
+
+	[TestMethod]
 	public void Inifinite_effect_should_modify_attribute_modifier_value()
 	{
 		var owner = new object();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
-			10,
 			new DurationData
 			{
 				Type = DurationType.Infinite,
@@ -65,12 +98,11 @@ public class GameplayEffectsTests
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
-			Value = 10,
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
-
-		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -102,7 +134,6 @@ public class GameplayEffectsTests
 
 		var effectData = new GameplayEffectData(
 			"Buff",
-			10,
 			new DurationData
 			{
 				Type = DurationType.HasDuration,
@@ -114,12 +145,11 @@ public class GameplayEffectsTests
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
-			Value = 10,
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
-
-		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -162,7 +192,6 @@ public class GameplayEffectsTests
 
 		var effectData = new GameplayEffectData(
 			"Buff",
-			10,
 			new DurationData
 			{
 				Type = DurationType.Infinite,
@@ -178,12 +207,11 @@ public class GameplayEffectsTests
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
-			Value = 10,
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
-
-		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -223,7 +251,6 @@ public class GameplayEffectsTests
 
 		var effectData = new GameplayEffectData(
 			"Buff",
-			10,
 			new DurationData
 			{
 				Type = DurationType.HasDuration,
@@ -239,12 +266,11 @@ public class GameplayEffectsTests
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
-			Value = 10,
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
-
-		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -284,7 +310,6 @@ public class GameplayEffectsTests
 
 		var effectData = new GameplayEffectData(
 			"Buff",
-			10,
 			new DurationData
 			{
 				Type = DurationType.Infinite,
@@ -294,9 +319,9 @@ public class GameplayEffectsTests
 			{
 				StackLimit = 5,
 				StackPolicy = StackPolicy.AggregateByTarget,
-				StackApplicationRefreshPolicy = StackApplicationRefreshPolicy.NeverRefresh,
+				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
 				StackRemovalPolicy = StackRemovalPolicy.ClearEntireStack,
-				StackLevelPolicy = StackLevelPolicy.AggregateByLevel,
+				StackApplicationRefreshPolicy = null,
 				StackLevelOverridePolicy = null,
 				StackApplicationResetPeriodPolicy = null,
 			},
@@ -305,12 +330,11 @@ public class GameplayEffectsTests
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
-			Value = 10,
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
-
-		Assert.AreEqual(10, effect.GetScaledMagnitude());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -319,9 +343,9 @@ public class GameplayEffectsTests
 		manager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
 	}
 
 	private class PlayerAttributeSet : AttributeSet

@@ -1,4 +1,5 @@
 using GameplayTags.Runtime.Attribute;
+using System.Reflection.Emit;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
@@ -48,14 +49,23 @@ public struct StackingData
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
 	public StackRemovalPolicy StackRemovalPolicy; // Aff stackable effects, infinite effects removal will count as expiration
 	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
-	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking = AggregateLevels
+	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking == AggregateLevels
 	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
+}
+
+public enum ModifierOperation : byte
+{
+	Add,
+	Multiply,
+	Divide,
+	Override,
 }
 
 public struct Modifier
 {
 	public TagName Attribute;
-	public int Value;
+	public ModifierOperation Operation;
+	public ScalableInt Value;
 }
 
 public enum DurationType : byte
@@ -80,10 +90,9 @@ public struct PeriodicData
 public class GameplayEffectData
 {
 	public List<Modifier> Modifiers { get; } = new ();
+	//public List<Executions> Executions { get; } = new ();
 
 	public string Name { get; }
-
-	public float BaseMagnitude { get; }
 
 	public DurationData DurationData { get; }
 
@@ -93,13 +102,11 @@ public class GameplayEffectData
 
 	public GameplayEffectData(
 		string name,
-		float baseMagnitude,
 		DurationData durationData,
 		StackingData? stackingData,
 		PeriodicData? periodicData)
 	{
 		Name = name;
-		BaseMagnitude = baseMagnitude;
 		DurationData = durationData;
 		StackingData = stackingData;
 		PeriodicData = periodicData;
@@ -167,27 +174,22 @@ public class GameplayEffect
 		Context = context;
 	}
 
-	public float GetScaledMagnitude()
-	{
-		return EffectData.BaseMagnitude * Level;
-	}
-
 	public void Execute(AttributeSet targetAttributeSet)
 	{
 		foreach (var modifier in EffectData.Modifiers)
 		{
-			targetAttributeSet.AttributesMap[modifier.Attribute].AddToBaseValue(modifier.Value);
+			targetAttributeSet.AttributesMap[modifier.Attribute].AddToBaseValue(modifier.Value.GetValue(Level));
 		}
 	}
 }
 
 public class ActiveGameplayEffect
 {
+	private readonly AttributeSet _targetAttributeSet;
+
 	private float _internalTime;
 
 	public GameplayEffect GameplayEffect { get; }
-
-	public AttributeSet TargetAttributeSet { get; }
 
 	public float RemainingDuration { get; private set; }
 
@@ -201,7 +203,7 @@ public class ActiveGameplayEffect
 	public ActiveGameplayEffect(GameplayEffect gameplayEffect, AttributeSet targetAttributeSet)
 	{
 		GameplayEffect = gameplayEffect;
-		TargetAttributeSet = targetAttributeSet;
+		_targetAttributeSet = targetAttributeSet;
 	}
 
 	public void Apply()
@@ -216,7 +218,7 @@ public class ActiveGameplayEffect
 			{
 				if (GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
 				{
-					GameplayEffect.Execute(TargetAttributeSet);
+					GameplayEffect.Execute(_targetAttributeSet);
 					ExecutionCount++;
 				}
 
@@ -224,7 +226,7 @@ public class ActiveGameplayEffect
 			}
 			else
 			{
-				TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value);
+				_targetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value.GetValue(GameplayEffect.Level));
 			}
 		}
 	}
@@ -235,7 +237,7 @@ public class ActiveGameplayEffect
 		{
 			foreach (var modifier in GameplayEffect.EffectData.Modifiers)
 			{
-				TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(-modifier.Value);
+				_targetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(-modifier.Value.GetValue(GameplayEffect.Level));
 			}
 		}
 	}
@@ -246,7 +248,7 @@ public class ActiveGameplayEffect
 
 		if (GameplayEffect.EffectData.PeriodicData.HasValue && _internalTime >= NextPeriodicTick)
 		{
-			GameplayEffect.Execute(TargetAttributeSet);
+			GameplayEffect.Execute(_targetAttributeSet);
 			ExecutionCount++;
 
 			NextPeriodicTick += GameplayEffect.EffectData.PeriodicData.Value.Period;
@@ -291,19 +293,9 @@ public class GameplayEffectsManager
 		}
 	}
 
-	private void ExecuteEffect(Attribute.Attribute attribute, Modifier modifier)
+	public void UnapplyEffect(GameplayEffect gameplayEffect)
 	{
-		// Do some pre-evaluations about the modifier
-		
-		//if (attribute.PreGameplayEffectExecute(modifier))
-		//{
-			// This gives a chance for the AttributeSet and others to manipulate the modifier before applying
-		//}
-
-		// This is probably a bit more complicated than that as it should use the previously calculated evaluation
-		attribute.AddToBaseValue(modifier.Value);
-
-		//attribute.PostGameplayEffectExecute(modifier);
+		//_activeEffects.Remove(gameplayEffect);
 	}
 
 	// What if the game is a turn based game?
