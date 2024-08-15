@@ -66,7 +66,7 @@ public class GameplayEffectsTests
 			Value = new ScalableInt(10),
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 2, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
 
 		var playerAttributes = new PlayerAttributeSet();
 
@@ -74,8 +74,17 @@ public class GameplayEffectsTests
 
 		manager.ApplyEffect(effect);
 
-		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+
+		effect.LevelUp();
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(31, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(31, playerAttributes.Strength.BaseValue);
 		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
 		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
 	}
@@ -240,6 +249,55 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(71, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(71, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+	}
+
+	[TestMethod]
+	public void Periodic_effect_should_modify_base_attribute_with_same_value_even_after_level_up()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+				Duration = 0,
+			},
+			null,
+			new PeriodicData
+			{
+				ExecuteOnApplication = true,
+				Period = 1,
+			});
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Add,
+			Value = new ScalableInt(10),
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+
+		effect.LevelUp();
+		// Simulate for 1 turn or seconds
+		manager.UpdateEffects(1);
+
+		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
 		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
 		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
 	}

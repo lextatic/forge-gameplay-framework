@@ -163,7 +163,7 @@ public class GameplayEffect
 {
 	public GameplayEffectData EffectData { get; }
 
-	public float Level { get; }
+	public float Level { get; set; }
 
 	public GameplayEffectContext Context { get; }
 
@@ -174,7 +174,12 @@ public class GameplayEffect
 		Context = context;
 	}
 
-	public void Execute(AttributeSet targetAttributeSet)
+	public void LevelUp()
+	{
+		Level++;
+	}
+
+	internal void Execute(AttributeSet targetAttributeSet)
 	{
 		foreach (var modifier in EffectData.Modifiers)
 		{
