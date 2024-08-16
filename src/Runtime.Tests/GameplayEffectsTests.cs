@@ -18,7 +18,7 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = 0,
+				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -34,7 +34,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -54,7 +54,7 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = 0,
+				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -70,7 +70,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -99,7 +99,7 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = 0,
+				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -115,7 +115,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -146,7 +146,7 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.HasDuration,
-				Duration = 10,
+				Duration = new ScalableFloat(10),
 			},
 			null,
 			null);
@@ -162,7 +162,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -204,13 +204,13 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = 0,
+				Duration = new ScalableFloat(0),
 			},
 			null,
 			new PeriodicData
 			{
 				ExecuteOnApplication = true,
-				Period = 1,
+				Period = new ScalableFloat(1),
 			});
 
 		effectData.Modifiers.Add(new Modifier
@@ -224,7 +224,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -263,13 +263,13 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = 0,
+				Duration = new ScalableFloat(0),
 			},
 			null,
 			new PeriodicData
 			{
 				ExecuteOnApplication = true,
-				Period = 1,
+				Period = new ScalableFloat(1),
 			});
 
 		effectData.Modifiers.Add(new Modifier
@@ -283,7 +283,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -312,13 +312,13 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.HasDuration,
-				Duration = 3,
+				Duration = new ScalableFloat(3),
 			},
 			null,
 			new PeriodicData
 			{
 				ExecuteOnApplication = true,
-				Period = 1,
+				Period = new ScalableFloat(1),
 			});
 
 		effectData.Modifiers.Add(new Modifier
@@ -332,7 +332,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 
@@ -371,11 +371,11 @@ public class GameplayEffectsTests
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = 0,
+				Duration = new ScalableFloat(0),
 			},
 			new StackingData
 			{
-				StackLimit = 5,
+				StackLimit = new ScalableInt(5),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
 				StackRemovalPolicy = StackRemovalPolicy.ClearEntireStack,
@@ -396,7 +396,7 @@ public class GameplayEffectsTests
 
 		var playerAttributes = new PlayerAttributeSet();
 
-		var manager = new GameplayEffectsManager(playerAttributes);
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
 
 		manager.ApplyEffect(effect);
 

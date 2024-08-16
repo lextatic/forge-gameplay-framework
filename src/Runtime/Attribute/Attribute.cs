@@ -3,28 +3,13 @@ using GameplayTags.Runtime.GameplayEffect;
 
 namespace GameplayTags.Runtime.Attribute;
 
-public struct GameplayEffectModifier
-{
-	public GameplayEffect.GameplayEffect GameplayEffect;
-	public GameplayModifierEvaluatedData EvaluatedData;
-	public object Target;
-}
-
-public struct GameplayModifierEvaluatedData
-{
-	public Attribute Attribute;
-	public ModifierOperation ModifierOperation;
-	public int Magnitude;
-	public bool IsValid;
-}
-
 public sealed class Attribute
 {
 	public event Action<Attribute, int>? OnValueChanged;
 
-	public event Func<Attribute, GameplayEffectModifier, bool> OnPreGameplayEffectExecute;
+	public event Func<Attribute, GameplayEffectEvaluatedData, bool> OnPreGameplayEffectExecute;
 
-	public event Action<Attribute, GameplayEffectModifier>? OnPostGameplayEffectExecute;
+	public event Action<Attribute, GameplayEffectEvaluatedData>? OnPostGameplayEffectExecute;
 
 	public int BaseValue { get; private set; }
 
@@ -158,7 +143,7 @@ public sealed class Attribute
 		}
 	}
 
-	internal bool PreGameplayEffectExecute(GameplayEffectModifier modifier)
+	internal bool PreGameplayEffectExecute(GameplayEffectEvaluatedData modifier)
 	{
 		if (OnPreGameplayEffectExecute is null)
 		{
@@ -168,7 +153,7 @@ public sealed class Attribute
 		return OnPreGameplayEffectExecute.Invoke(this, modifier);
 	}
 
-	internal void PostGameplayEffectExecute(GameplayEffectModifier modifier)
+	internal void PostGameplayEffectExecute(GameplayEffectEvaluatedData modifier)
 	{
 		OnPostGameplayEffectExecute?.Invoke(this, modifier);
 	}
