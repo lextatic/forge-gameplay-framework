@@ -1,4 +1,6 @@
 #pragma warning disable SA1600
+using GameplayTags.Runtime.GameplayEffect;
+
 namespace GameplayTags.Runtime.Attribute;
 
 public struct GameplayEffectModifier
@@ -11,7 +13,7 @@ public struct GameplayEffectModifier
 public struct GameplayModifierEvaluatedData
 {
 	public Attribute Attribute;
-	public int ModifierOperation;
+	public ModifierOperation ModifierOperation;
 	public int Magnitude;
 	public bool IsValid;
 }

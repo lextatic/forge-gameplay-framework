@@ -1,5 +1,7 @@
 using GameplayTags.Runtime.Attribute;
+using System.Reflection;
 using System.Reflection.Emit;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
@@ -155,8 +157,8 @@ public class GameplayEffectData
 
 public struct GameplayEffectContext
 {
-	public object Instigator;
-	public object EffectCauser;
+	public object Instigator; // Entity responsible for causing the action or event (eg. Character, NPC, Environment)
+	public object EffectCauser; // The actual entity that caused the effect (eg. Weapon, Projectile, Trap)
 }
 
 public class GameplayEffect
@@ -179,81 +181,99 @@ public class GameplayEffect
 		Level++;
 	}
 
-	internal void Execute(AttributeSet targetAttributeSet)
+	internal void Execute(List<GameplayModifierEvaluatedData> modifiersEvaluatedData)
 	{
-		foreach (var modifier in EffectData.Modifiers)
+		foreach(var modifier in modifiersEvaluatedData)
 		{
-			targetAttributeSet.AttributesMap[modifier.Attribute].AddToBaseValue(modifier.Value.GetValue(Level));
+			switch (modifier.ModifierOperation)
+			{
+				default:
+				case ModifierOperation.Add:
+					modifier.Attribute.AddToBaseValue(modifier.Magnitude);
+					break;
+
+				case ModifierOperation.Multiply:
+					// Multiply value
+					break;
+
+				case ModifierOperation.Divide:
+					// Divide value
+					break;
+
+				case ModifierOperation.Override:
+					// Override value
+					break;
+			}
 		}
 	}
 }
 
-public class ActiveGameplayEffect
+internal class ActiveGameplayEffect
 {
-	private readonly AttributeSet _targetAttributeSet;
+	private readonly List<GameplayModifierEvaluatedData> _modifiersEvaluatedData = new ();
 
 	private float _internalTime;
 
-	public GameplayEffect GameplayEffect { get; }
+	internal GameplayEffect GameplayEffect { get; }
 
-	public float RemainingDuration { get; private set; }
+	internal float RemainingDuration { get; private set; }
 
-	public float NextPeriodicTick { get; private set; }
+	internal float NextPeriodicTick { get; private set; }
 
-	public float ExecutionCount { get; private set; }
+	internal float ExecutionCount { get; private set; }
 
-	public bool IsExpired => GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration &&
+	internal bool IsExpired => GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration &&
 		RemainingDuration <= 0;
 
-	public ActiveGameplayEffect(GameplayEffect gameplayEffect, AttributeSet targetAttributeSet)
+	internal ActiveGameplayEffect(GameplayEffect gameplayEffect, List<GameplayModifierEvaluatedData> modifiersEvaluatedData)
 	{
 		GameplayEffect = gameplayEffect;
-		_targetAttributeSet = targetAttributeSet;
+		_modifiersEvaluatedData = modifiersEvaluatedData;
 	}
 
-	public void Apply()
+	internal void Apply()
 	{
 		_internalTime = 0;
 		ExecutionCount = 0;
 		RemainingDuration = GameplayEffect.EffectData.DurationData.Duration;
 
-		foreach (var modifier in GameplayEffect.EffectData.Modifiers)
+		if (GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			if (GameplayEffect.EffectData.PeriodicData.HasValue)
+			if (GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
 			{
-				if (GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
-				{
-					GameplayEffect.Execute(_targetAttributeSet);
-					ExecutionCount++;
-				}
-
-				NextPeriodicTick = GameplayEffect.EffectData.PeriodicData.Value.Period;
+				GameplayEffect.Execute(_modifiersEvaluatedData);
+				ExecutionCount++;
 			}
-			else
+
+			NextPeriodicTick = GameplayEffect.EffectData.PeriodicData.Value.Period;
+		}
+		else
+		{
+			foreach (var modifier in _modifiersEvaluatedData)
 			{
-				_targetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value.GetValue(GameplayEffect.Level));
+				modifier.Attribute.ApplyModifier(modifier.Magnitude);
 			}
 		}
 	}
 
-	public void Unapply()
+	internal void Unapply()
 	{
 		if (!GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			foreach (var modifier in GameplayEffect.EffectData.Modifiers)
+			foreach (var modifier in _modifiersEvaluatedData)
 			{
-				_targetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(-modifier.Value.GetValue(GameplayEffect.Level));
+				modifier.Attribute.ApplyModifier(-modifier.Magnitude);
 			}
 		}
 	}
 
-	public void Update(float deltaTime)
+	internal void Update(float deltaTime)
 	{
 		_internalTime += deltaTime;
 
 		if (GameplayEffect.EffectData.PeriodicData.HasValue && _internalTime >= NextPeriodicTick)
 		{
-			GameplayEffect.Execute(_targetAttributeSet);
+			GameplayEffect.Execute(_modifiersEvaluatedData);
 			ExecutionCount++;
 
 			NextPeriodicTick += GameplayEffect.EffectData.PeriodicData.Value.Period;
@@ -285,16 +305,18 @@ public class GameplayEffectsManager
 
 	public void ApplyEffect(GameplayEffect gameplayEffect)
 	{
+		var evaluatedModifiers = EvaluateModifiers(gameplayEffect);
+
 		if (gameplayEffect.EffectData.DurationData.Type != DurationType.Instant)
 		{
-			var activeEffect = new ActiveGameplayEffect(gameplayEffect, _attributeSet);
+			var activeEffect = new ActiveGameplayEffect(gameplayEffect, evaluatedModifiers);
 			_activeEffects.Add(activeEffect);
 			activeEffect.Apply();
 		}
 		else
 		{
 			// This path is called "Execute" and should work for instant effects
-			gameplayEffect.Execute(_attributeSet);
+			gameplayEffect.Execute(evaluatedModifiers);
 		}
 	}
 
@@ -312,5 +334,22 @@ public class GameplayEffectsManager
 		}
 
 		_activeEffects.RemoveAll(e => e.IsExpired);
+	}
+
+	private List<GameplayModifierEvaluatedData> EvaluateModifiers(GameplayEffect gameplayEffect)
+	{
+		var modifiersEvaluatedData = new List<GameplayModifierEvaluatedData>();
+
+		foreach (var modifier in gameplayEffect.EffectData.Modifiers)
+		{
+			modifiersEvaluatedData.Add(new GameplayModifierEvaluatedData
+			{
+				Attribute = _attributeSet.AttributesMap[modifier.Attribute],
+				ModifierOperation = modifier.Operation,
+				Magnitude = modifier.Value.GetValue(gameplayEffect.Level),
+			});
+		}
+
+		return modifiersEvaluatedData;
 	}
 }
