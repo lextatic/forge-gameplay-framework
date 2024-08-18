@@ -138,11 +138,13 @@ public sealed class Attribute
 		}
 	}
 
-	internal void AddToBaseValue(int value)
+	internal void ExecutePercentBonus(float percentBonus)
 	{
+		System.Diagnostics.Debug.Assert(percentBonus > 0, $"percentBonus:({percentBonus}) must be higher than 0.");
+
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Clamp(BaseValue + value, MinValue, MaxValue);
+		BaseValue = Math.Clamp((int)(BaseValue * (1 + percentBonus)), Min, Max);
 
 		UpdateCachedValues();
 
@@ -152,11 +154,13 @@ public sealed class Attribute
 		}
 	}
 
-	internal void ApplyModifier(int value)
+	internal void ExecutePercentPenalty(float percentPenalty)
 	{
+		System.Diagnostics.Debug.Assert(percentPenalty > 0, $"percentBonus:({percentPenalty}) must be higher than 0.");
+
 		int oldValue = TotalValue;
 
-		TotalModifierValue += value;
+		BaseValue = Math.Clamp((int)(BaseValue * (1 - percentPenalty)), Min, Max);
 
 		UpdateCachedValues();
 
@@ -166,7 +170,53 @@ public sealed class Attribute
 		}
 	}
 
-	internal bool PreGameplayEffectExecute(GameplayEffectModifier modifier)
+	internal void AddModifier(int value)
+	{
+		int oldValue = TotalValue;
+
+		Modifier += value;
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal void AddPercentBonus(float percentBonus)
+	{
+		System.Diagnostics.Debug.Assert(percentBonus > 0, $"percentBonus:({percentBonus}) must be higher than 0.");
+
+		int oldValue = TotalValue;
+
+		PercentBonus += percentBonus;
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal void AddPercentPenalty(float percentPenalty)
+	{
+		System.Diagnostics.Debug.Assert(percentPenalty > 0, $"percentBonus:({percentPenalty}) must be higher than 0.");
+
+		int oldValue = TotalValue;
+
+		PercentPenalty += percentPenalty;
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal bool PreGameplayEffectExecute(GameplayEffectEvaluatedData modifier)
 	{
 		if (OnPreGameplayEffectExecute is null)
 		{
