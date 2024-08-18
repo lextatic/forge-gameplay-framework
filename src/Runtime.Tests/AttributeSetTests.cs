@@ -16,10 +16,12 @@ public class AttributeSetTests
 		var attribute = set.NonInitializedAttribute;
 
 		Assert.AreEqual(0, attribute.BaseValue);
-		Assert.AreEqual(0, attribute.TotalModifierValue);
-		Assert.AreEqual(0, attribute.ValidModifierValue);
-		Assert.AreEqual(int.MinValue, attribute.MinValue);
-		Assert.AreEqual(int.MaxValue, attribute.MaxValue);
+		Assert.AreEqual(0, attribute.Modifier);
+		Assert.AreEqual(0, attribute.PercentBonus);
+		Assert.AreEqual(0, attribute.PercentPenalty);
+		Assert.AreEqual(0, attribute.Overflow);
+		Assert.AreEqual(int.MinValue, attribute.Min);
+		Assert.AreEqual(int.MaxValue, attribute.Max);
 		Assert.AreEqual(0, attribute.TotalValue);
 	}
 
@@ -31,10 +33,12 @@ public class AttributeSetTests
 		var attribute = set.InitializedAttribute;
 
 		Assert.AreEqual(5, attribute.BaseValue);
-		Assert.AreEqual(0, attribute.TotalModifierValue);
-		Assert.AreEqual(0, attribute.ValidModifierValue);
-		Assert.AreEqual(0, attribute.MinValue);
-		Assert.AreEqual(10, attribute.MaxValue);
+		Assert.AreEqual(0, attribute.Modifier);
+		Assert.AreEqual(0, attribute.PercentBonus);
+		Assert.AreEqual(0, attribute.PercentPenalty);
+		Assert.AreEqual(0, attribute.Overflow);
+		Assert.AreEqual(0, attribute.Min);
+		Assert.AreEqual(10, attribute.Max);
 		Assert.AreEqual(5, attribute.TotalValue);
 	}
 
