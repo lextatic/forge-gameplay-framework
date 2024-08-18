@@ -10,11 +10,6 @@ public struct ScalableInt
 	{
 		BaseValue = baseValue;
 		ScalingCurve = new Curve();
-
-		ScalingCurve.AddKey(0, 0);
-		ScalingCurve.AddKey(1, 1);
-		ScalingCurve.AddKey(2, 2);
-		ScalingCurve.AddKey(3, 3);
 	}
 
 	public int GetValue(float time)

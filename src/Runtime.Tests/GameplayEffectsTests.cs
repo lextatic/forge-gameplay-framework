@@ -27,7 +27,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -40,8 +40,132 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+	}
+
+	[TestMethod]
+	public void Instant_effect_of_different_operations_should_modify_base_value_accordingly()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Level Up",
+			new DurationData
+			{
+				Type = DurationType.Instant,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Add,
+			Value = new ScalableFloat(4),
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(5, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(5, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+
+		var effectData2 = new GameplayEffectData(
+			"Rank Up",
+			new DurationData
+			{
+				Type = DurationType.Instant,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData2.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.PercentBonus,
+			Value = new ScalableFloat(4), // 400% bonus
+		});
+
+		var effect2 = new GameplayEffect.GameplayEffect(effectData2, 1, new GameplayEffectContext());
+
+		manager.ApplyEffect(effect2);
+
+		Assert.AreEqual(25, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(25, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+
+		var effectData3 = new GameplayEffectData(
+			"Rank Down",
+			new DurationData
+			{
+				Type = DurationType.Instant,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData3.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.PercentPenalty,
+			Value = new ScalableFloat(0.66f), // Divides by 3 (66% reduction)
+		});
+
+		var effect3 = new GameplayEffect.GameplayEffect(effectData3, 1, new GameplayEffectContext());
+
+		manager.ApplyEffect(effect3);
+
+		Assert.AreEqual(8, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(8, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+
+		var effectData4 = new GameplayEffectData(
+			"Rank Fix",
+			new DurationData
+			{
+				Type = DurationType.Instant,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData4.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Override,
+			Value = new ScalableFloat(42),
+		});
+
+		var effect4 = new GameplayEffect.GameplayEffect(effectData4, 1, new GameplayEffectContext());
+
+		manager.ApplyEffect(effect4);
+
+		Assert.AreEqual(42, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(42, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -63,7 +187,9 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10)
+				.AddKey(1, 1)
+				.AddKey(2, 2),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -76,8 +202,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		effect.LevelUp();
 
@@ -85,8 +213,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(31, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(31, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -108,7 +238,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -121,8 +251,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate 5 seconds
 		for (int i = 0; i < 32 * 5; i++)
@@ -132,8 +264,104 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+	}
+
+	[TestMethod]
+	public void Infinite_effect_of_different_operations_should_modify_modifier_and_multiplier_value_accordingly()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Add,
+			Value = new ScalableFloat(4),
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(5, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(4, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+
+		var effectData2 = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData2.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.PercentBonus,
+			Value = new ScalableFloat(4), // 400% bonus
+		});
+
+		var effect2 = new GameplayEffect.GameplayEffect(effectData2, 1, new GameplayEffectContext());
+
+		manager.ApplyEffect(effect2);
+
+		Assert.AreEqual(25, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(4, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(4, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+
+		var effectData3 = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData3.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.PercentPenalty,
+			Value = new ScalableFloat(0.66f), // Divide by 3 (-66%)
+		});
+
+		var effect3 = new GameplayEffect.GameplayEffect(effectData3, 1, new GameplayEffectContext());
+
+		manager.ApplyEffect(effect3);
+
+		Assert.AreEqual(8, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(4, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(4, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0.66f, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -155,7 +383,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -168,8 +396,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate 5 seconds
 		for (int i = 0; i < 32 * 5; i++)
@@ -179,8 +409,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
@@ -190,8 +422,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(1, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -217,7 +451,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -230,16 +464,20 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate for 1 turn or seconds
 		manager.UpdateEffects(1);
 
 		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
@@ -249,8 +487,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(71, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(71, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -276,7 +516,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -289,8 +529,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		effect.LevelUp();
 		// Simulate for 1 turn or seconds
@@ -298,8 +540,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -325,7 +569,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -338,16 +582,20 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate for 1 turn or seconds
 		manager.UpdateEffects(1);
 
 		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
@@ -357,8 +605,10 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(41, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(41, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(0, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentPenalty);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	[TestMethod]
@@ -378,7 +628,7 @@ public class GameplayEffectsTests
 				StackLimit = new ScalableInt(5),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
-				StackRemovalPolicy = StackRemovalPolicy.ClearEntireStack,
+				StackExpirationPolicy = StackExpirationPolicy.ClearEntireStack,
 				StackApplicationRefreshPolicy = null,
 				StackLevelOverridePolicy = null,
 				StackApplicationResetPeriodPolicy = null,
@@ -389,7 +639,7 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Add,
-			Value = new ScalableInt(10),
+			Value = new ScalableFloat(10),
 		});
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
@@ -402,8 +652,9 @@ public class GameplayEffectsTests
 
 		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
 		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.ValidModifierValue);
-		Assert.AreEqual(10, playerAttributes.Strength.TotalModifierValue);
+		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.PercentBonus);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
 	}
 
 	private class PlayerAttributeSet : AttributeSet

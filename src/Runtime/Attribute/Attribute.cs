@@ -13,27 +13,34 @@ public sealed class Attribute
 
 	public int BaseValue { get; private set; }
 
+	public int Max { get; private set; }
+
+	public int Min { get; private set; }
+
+
 	/// <summary>
 	/// Gets the total modifier value kept so we can make Status Effect application consise, but this value could be
 	/// clamped and thus having an invalid part.
 	/// </summary>
-	public int TotalModifierValue { get; private set; }
+	public int Modifier { get; private set; }
 
-	public int ValidModifierValue { get; private set; }
+	public float PercentBonus { get; private set; }
 
-	public int MaxValue { get; private set; }
+	public float PercentPenalty { get; private set; }
 
-	public int MinValue { get; private set; }
+	public int Overflow { get; private set; }
 
 	public int TotalValue { get; private set; }
 
 	internal Attribute()
 	{
-		MinValue = int.MinValue;
-		MaxValue = int.MaxValue;
+		Min = int.MinValue;
+		Max = int.MaxValue;
 		BaseValue = 0;
-		TotalModifierValue = 0;
-		ValidModifierValue = 0;
+		Modifier = 0;
+		Overflow = 0;
+		PercentBonus = 0;
+		PercentPenalty = 0;
 		TotalValue = 0;
 	}
 
@@ -51,11 +58,13 @@ public sealed class Attribute
 			throw new ArgumentException("DefaultValue should be withing MinValue and MaxValue.");
 		}
 
-		MinValue = minValue;
-		MaxValue = maxValue;
+		Min = minValue;
+		Max = maxValue;
 		BaseValue = defaultValue;
-		TotalModifierValue = 0;
-		ValidModifierValue = 0;
+		Modifier = 0;
+		Overflow = 0;
+		PercentBonus = 0;
+		PercentPenalty = 0;
 		TotalValue = BaseValue;
 	}
 
@@ -65,14 +74,14 @@ public sealed class Attribute
 		// Or should I fix it right now? (I don't think so...)
 		// Should I warn if so? (Since I won't fix, I won't notify)
 		// Should it be an Assert then? (Yea, probably... but maybe an exception)
-		if (newMaxValue < MinValue)
+		if (newMaxValue < Min)
 		{
 			throw new ArgumentException("MaxValue cannot be lower than MinValue.");
 		}
 
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Min(BaseValue, MaxValue);
+		BaseValue = Math.Min(BaseValue, Max);
 
 		UpdateCachedValues();
 
@@ -84,14 +93,14 @@ public sealed class Attribute
 
 	internal void SetMinValue(int newMinValue)
 	{
-		if (newMinValue > MaxValue)
+		if (newMinValue > Max)
 		{
 			throw new ArgumentException("MinValue cannot be lower than MaxValue.");
 		}
 
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Max(BaseValue, MinValue);
+		BaseValue = Math.Max(BaseValue, Min);
 
 		UpdateCachedValues();
 
@@ -101,11 +110,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void SetBaseValue(int newValue)
+	internal void OverrideBaseValue(int newValue)
 	{
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Clamp(newValue, MinValue, MaxValue);
+		BaseValue = Math.Clamp(newValue, Min, Max);
 
 		UpdateCachedValues();
 
@@ -115,11 +124,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void AddToBaseValue(int value)
+	internal void ExecuteModifier(int value)
 	{
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Clamp(BaseValue + value, MinValue, MaxValue);
+		BaseValue = Math.Clamp(BaseValue + value, Min, Max);
 
 		UpdateCachedValues();
 
@@ -129,11 +138,67 @@ public sealed class Attribute
 		}
 	}
 
-	internal void ApplyModifier(int value)
+	internal void ExecutePercentBonus(float percentBonus)
 	{
 		int oldValue = TotalValue;
 
-		TotalModifierValue += value;
+		BaseValue = Math.Clamp((int)(BaseValue * (1 + percentBonus)), Min, Max);
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal void ExecutePercentPenalty(float percentPenalty)
+	{
+		int oldValue = TotalValue;
+
+		BaseValue = Math.Clamp((int)(BaseValue * (1 - percentPenalty)), Min, Max);
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal void AddModifier(int value)
+	{
+		int oldValue = TotalValue;
+
+		Modifier += value;
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal void AddPercentBonus(float percentBonus)
+	{
+		int oldValue = TotalValue;
+
+		PercentBonus += percentBonus;
+
+		UpdateCachedValues();
+
+		if (TotalValue != oldValue)
+		{
+			OnValueChanged?.Invoke(this, TotalValue - oldValue);
+		}
+	}
+
+	internal void AddPercentPenalty(float percentPenalty)
+	{
+		int oldValue = TotalValue;
+
+		PercentPenalty += percentPenalty;
 
 		UpdateCachedValues();
 
@@ -160,7 +225,16 @@ public sealed class Attribute
 
 	private void UpdateCachedValues()
 	{
-		TotalValue = Math.Clamp(BaseValue + TotalModifierValue, MinValue, MaxValue);
-		ValidModifierValue = TotalValue - BaseValue;
+		var evaluatedValue = (int)((BaseValue + Modifier) * (1f + PercentBonus) * (1f - PercentPenalty));
+		TotalValue = Math.Clamp(evaluatedValue, Min, Max);
+
+		if (evaluatedValue > Max)
+		{
+			Overflow = evaluatedValue - Max;
+		}
+		else
+		{
+			Overflow = 0;
+		}
 	}
 }

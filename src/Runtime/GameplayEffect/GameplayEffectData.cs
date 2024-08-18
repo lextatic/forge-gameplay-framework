@@ -30,7 +30,7 @@ public enum StackApplicationRefreshPolicy : byte
 	NeverRefresh,
 }
 
-public enum StackRemovalPolicy : byte
+public enum StackExpirationPolicy : byte
 {
 	ClearEntireStack,
 	RemoveSingleStackAndRefreshDuration,
@@ -47,7 +47,7 @@ public struct StackingData
 	public ScalableInt StackLimit; // All stackable effects
 	public StackPolicy StackPolicy; // All stackable effects
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
-	public StackRemovalPolicy StackRemovalPolicy; // Aff stackable effects, infinite effects removal will count as expiration
+	public StackExpirationPolicy StackExpirationPolicy; // Aff stackable effects, infinite effects removal will count as expiration
 	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
 	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking == AggregateLevels
 	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
@@ -56,8 +56,8 @@ public struct StackingData
 public enum ModifierOperation : byte
 {
 	Add,
-	Multiply,
-	Divide,
+	PercentBonus,
+	PercentPenalty,
 	Override,
 }
 
@@ -65,7 +65,7 @@ public struct Modifier
 {
 	public TagName Attribute;
 	public ModifierOperation Operation;
-	public ScalableInt Value;
+	public ScalableFloat Value;
 }
 
 public enum DurationType : byte
@@ -111,6 +111,16 @@ public class GameplayEffectData // Immutable
 		StackingData = stackingData;
 		PeriodicData = periodicData;
 
+		foreach (var modifier in Modifiers)
+		{
+			if ((modifier.Operation == ModifierOperation.PercentBonus ||
+				modifier.Operation == ModifierOperation.PercentPenalty) &&
+				modifier.Value.BaseValue < 0)
+			{
+				throw new ArgumentException($"{modifier.Operation} cannot have negative values.");
+			}
+		}
+
 		// Should I really throw? Or just ignore (force null) the periodic data?
 		if (periodicData.HasValue && durationData.Type == DurationType.Instant)
 		{
@@ -121,6 +131,18 @@ public class GameplayEffectData // Immutable
 		if (durationData.Type != DurationType.HasDuration && durationData.Duration.BaseValue != 0)
 		{
 			throw new Exception($"Can't set duration if {nameof(DurationType)} is set to {durationData.Type}.");
+		}
+
+		if (durationData.Type != DurationType.Instant && !periodicData.HasValue)
+		{
+			foreach (var modifier in Modifiers)
+			{
+				if (modifier.Operation == ModifierOperation.Override)
+				{
+					throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
+							$"operation of type {ModifierOperation.Override}.");
+				}
+			}
 		}
 
 		if (stackingData.HasValue)
@@ -168,7 +190,7 @@ public struct ModifierEvaluatedData
 {
 	public Attribute.Attribute Attribute;
 	public ModifierOperation ModifierOperation;
-	public int Magnitude;
+	public float Magnitude;
 	public bool IsValid; // remove if not used
 }
 
@@ -202,30 +224,22 @@ public class GameplayEffect
 	{
 		foreach(var modifier in effectEvaluatedData.ModifiersEvaluatedData)
 		{
-			//if (modifier.Attribute.PreGameplayEffectExecute(effectEvaluatedData))
-			//{
-			//	Console.WriteLine("Modified");
-
-			//	modifier.Attribute.PostGameplayEffectExecute(effectEvaluatedData);
-			//}
-
 			switch (modifier.ModifierOperation)
 			{
-				default:
 				case ModifierOperation.Add:
-					modifier.Attribute.AddToBaseValue(modifier.Magnitude);
+					modifier.Attribute.ExecuteModifier((int)modifier.Magnitude);
 					break;
 
-				case ModifierOperation.Multiply:
-					// Multiply value
+				case ModifierOperation.PercentBonus:
+					modifier.Attribute.ExecutePercentBonus(modifier.Magnitude);
 					break;
 
-				case ModifierOperation.Divide:
-					// Divide value
+				case ModifierOperation.PercentPenalty:
+					modifier.Attribute.ExecutePercentPenalty(modifier.Magnitude);
 					break;
 
 				case ModifierOperation.Override:
-					// Override value
+					modifier.Attribute.OverrideBaseValue((int)modifier.Magnitude);
 					break;
 			}
 		}
@@ -273,7 +287,24 @@ internal class ActiveGameplayEffect
 		{
 			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 			{
-				modifier.Attribute.ApplyModifier(modifier.Magnitude);
+				switch (modifier.ModifierOperation)
+				{
+					case ModifierOperation.Add:
+						modifier.Attribute.AddModifier((int)modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentBonus:
+						modifier.Attribute.AddPercentBonus(modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentPenalty:
+						modifier.Attribute.AddPercentPenalty(modifier.Magnitude);
+						break;
+
+					case ModifierOperation.Override:
+						throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
+							$"operation of type {ModifierOperation.Override}.");
+				}
 			}
 		}
 	}
@@ -284,7 +315,24 @@ internal class ActiveGameplayEffect
 		{
 			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 			{
-				modifier.Attribute.ApplyModifier(-modifier.Magnitude);
+				switch (modifier.ModifierOperation)
+				{
+					case ModifierOperation.Add:
+						modifier.Attribute.AddModifier(-(int)modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentBonus:
+						modifier.Attribute.AddPercentBonus(-modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentPenalty:
+						modifier.Attribute.AddPercentPenalty(-modifier.Magnitude);
+						break;
+
+					case ModifierOperation.Override:
+						throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
+							$"operation of type {ModifierOperation.Override}.");
+				}
 			}
 		}
 	}
@@ -350,7 +398,6 @@ public class GameplayEffectsManager
 		//_activeEffects.Remove(gameplayEffect);
 	}
 
-	// What if the game is a turn based game?
 	public void UpdateEffects(float deltaTime)
 	{
 		foreach (var effect in _activeEffects)
