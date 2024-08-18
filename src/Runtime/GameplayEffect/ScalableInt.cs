@@ -1,20 +1,20 @@
 namespace GameplayTags.Runtime.GameplayEffect;
 
-public struct ScalableFloat
+public struct ScalableInt
 {
-	public float BaseValue { get; set; }
+	public int BaseValue { get; set; }
 
 	public Curve ScalingCurve { get; set; }
 
-	public ScalableFloat(float baseValue)
+	public ScalableInt(int baseValue)
 	{
 		BaseValue = baseValue;
 		ScalingCurve = new Curve();
 	}
 
-	public float GetValue(float time)
+	public int GetValue(float time)
 	{
 		float scalingFactor = ScalingCurve.Evaluate(time);
-		return BaseValue * scalingFactor;
+		return (int)(BaseValue * scalingFactor);
 	}
 }

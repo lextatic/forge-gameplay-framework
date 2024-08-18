@@ -1,33 +1,42 @@
 using GameplayTags.Runtime.Attribute;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
 
-public enum StackingType : byte
+public enum StackPolicy : byte
 {
 	AggregateBySource,
 	AggregateByTarget,
 }
 
-// Neeed if any Aggregate
-public enum StackingDurationPolicy : byte
+public enum StackLevelPolicy : byte
+{
+	AggregateLevels,
+	SegregateLevels,
+}
+
+public enum StackLevelOverridePolicy : byte
+{
+	AlwaysKeep,
+	AlwaysOverride,
+	KeepHighest,
+	KeepLowest,
+}
+
+public enum StackApplicationRefreshPolicy : byte
 {
 	RefreshOnSuccessfulApplication,
 	NeverRefresh,
 }
 
-// Neeed if any Aggregate
-public enum StackingExpirationPolicy : byte
+public enum StackExpirationPolicy : byte
 {
 	ClearEntireStack,
 	RemoveSingleStackAndRefreshDuration,
-	/** The duration of the gameplay effect is refreshed. This essentially makes the effect infinite in duration. This can be used to manually handle stack decrements via OnStackCountChange callback */
-	RefreshDuration,
 }
 
-// Neeed if any Aggregate and PeriodData is existing
-// Could be in the StackingData ou PeriodicData
-public enum StackingPeriodPolicy : byte
+public enum StackApplicationResetPeriodPolicy : byte
 {
 	ResetOnSuccessfulApplication,
 	NeverReset,
@@ -35,17 +44,28 @@ public enum StackingPeriodPolicy : byte
 
 public struct StackingData
 {
-	public StackingType Type;
-	public int StackLimit;
-	public StackingDurationPolicy DurationPolicy;
-	public StackingExpirationPolicy ExpirationPolicy;
-	public StackingPeriodPolicy? PeriodPolicy;
+	public ScalableInt StackLimit; // All stackable effects
+	public StackPolicy StackPolicy; // All stackable effects
+	public StackLevelPolicy StackLevelPolicy; // All stackable effects
+	public StackExpirationPolicy StackExpirationPolicy; // Aff stackable effects, infinite effects removal will count as expiration
+	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
+	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking == AggregateLevels
+	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
+}
+
+public enum ModifierOperation : byte
+{
+	Add,
+	PercentBonus,
+	PercentPenalty,
+	Override,
 }
 
 public struct Modifier
 {
 	public TagName Attribute;
-	public int Value;
+	public ModifierOperation Operation;
+	public ScalableFloat Value;
 }
 
 public enum DurationType : byte
@@ -58,22 +78,21 @@ public enum DurationType : byte
 public struct DurationData
 {
 	public DurationType Type;
-	public float Duration;
+	public ScalableFloat Duration;
 }
 
 public struct PeriodicData
 {
-	public float Period;
+	public ScalableFloat Period;
 	public bool ExecuteOnApplication;
 }
 
-public class GameplayEffectData
+public class GameplayEffectData // Immutable
 {
 	public List<Modifier> Modifiers { get; } = new ();
+	//public List<Executions> Executions { get; } = new ();
 
 	public string Name { get; }
-
-	public float BaseMagnitude { get; }
 
 	public DurationData DurationData { get; }
 
@@ -83,16 +102,24 @@ public class GameplayEffectData
 
 	public GameplayEffectData(
 		string name,
-		float baseMagnitude,
 		DurationData durationData,
 		StackingData? stackingData,
 		PeriodicData? periodicData)
 	{
 		Name = name;
-		BaseMagnitude = baseMagnitude;
 		DurationData = durationData;
 		StackingData = stackingData;
 		PeriodicData = periodicData;
+
+		foreach (var modifier in Modifiers)
+		{
+			if ((modifier.Operation == ModifierOperation.PercentBonus ||
+				modifier.Operation == ModifierOperation.PercentPenalty) &&
+				modifier.Value.BaseValue < 0)
+			{
+				throw new ArgumentException($"{modifier.Operation} cannot have negative values.");
+			}
+		}
 
 		// Should I really throw? Or just ignore (force null) the periodic data?
 		if (periodicData.HasValue && durationData.Type == DurationType.Instant)
@@ -101,133 +128,228 @@ public class GameplayEffectData
 		}
 
 		// Should I really throw? Or just ignore (force null) the periodic data?
-		if (durationData.Type != DurationType.HasDuration && durationData.Duration != 0)
+		if (durationData.Type != DurationType.HasDuration && durationData.Duration.BaseValue != 0)
 		{
-			throw new Exception($"Can't set duration if DurationType is set to {durationData.Type}.");
+			throw new Exception($"Can't set duration if {nameof(DurationType)} is set to {durationData.Type}.");
+		}
+
+		if (durationData.Type != DurationType.Instant && !periodicData.HasValue)
+		{
+			foreach (var modifier in Modifiers)
+			{
+				if (modifier.Operation == ModifierOperation.Override)
+				{
+					throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
+							$"operation of type {ModifierOperation.Override}.");
+				}
+			}
 		}
 
 		if (stackingData.HasValue)
 		{
 			if (durationData.Type == DurationType.Instant)
 			{
-				throw new Exception("Instant effects can't have stacks.");
+				throw new Exception($"{DurationType.Instant} effects can't have stacks.");
 			}
 
-			if (stackingData.Value.PeriodPolicy.HasValue != PeriodicData.HasValue)
+			if (stackingData.Value.StackApplicationResetPeriodPolicy.HasValue != PeriodicData.HasValue)
 			{
-				throw new Exception("Both PeriodicData and PeriodPolicy must be either defined or undefined.");
+				throw new Exception($"Both {nameof(PeriodicData)} and {nameof(StackApplicationResetPeriodPolicy)} " +
+					$"must be either defined or undefined.");
+			}
+
+			if (stackingData.Value.StackLevelPolicy == StackLevelPolicy.AggregateLevels !=
+				stackingData.Value.StackLevelOverridePolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackLevelPolicy)} is set {StackLevelPolicy.AggregateLevels}, " +
+					$"{nameof(StackLevelOverridePolicy)} must be defined. And not defined if otherwise.");
+			}
+
+			if (durationData.Type == DurationType.HasDuration !=
+				stackingData.Value.StackApplicationRefreshPolicy.HasValue)
+			{
+				throw new Exception($"Effects set as {DurationType.HasDuration} must define " +
+					$" {nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");
 			}
 		}
 	}
 }
 
+public struct GameplayEffectEvaluatedData
+{
+	public GameplayEffect GameplayEffect;
+	public List<ModifierEvaluatedData> ModifiersEvaluatedData;
+	public int Level;
+	public int Stack;
+	public float Duration;
+	public float Period;
+	public object Target;
+}
+
+public struct ModifierEvaluatedData
+{
+	public Attribute.Attribute Attribute;
+	public ModifierOperation ModifierOperation;
+	public float Magnitude;
+	public bool IsValid; // remove if not used
+}
+
 public struct GameplayEffectContext
 {
-	public object Instigator;
-	public object EffectCauser;
+	public object Instigator; // Entity responsible for causing the action or event (eg. Character, NPC, Environment)
+	public object EffectCauser; // The actual entity that caused the effect (eg. Weapon, Projectile, Trap)
 }
 
 public class GameplayEffect
 {
 	public GameplayEffectData EffectData { get; }
 
-	public float Level { get; }
+	public int Level { get; set; }
 
 	public GameplayEffectContext Context { get; }
 
-	public GameplayEffect(GameplayEffectData effectData, float level, GameplayEffectContext context)
+	public GameplayEffect(GameplayEffectData effectData, int level, GameplayEffectContext context)
 	{
 		EffectData = effectData;
 		Level = level;
 		Context = context;
 	}
 
-	public float GetScaledMagnitude()
+	public void LevelUp()
 	{
-		return EffectData.BaseMagnitude * Level;
+		Level++;
 	}
 
-	public void Execute(AttributeSet targetAttributeSet)
+	internal void Execute(GameplayEffectEvaluatedData effectEvaluatedData)
 	{
-		foreach (var modifier in EffectData.Modifiers)
+		foreach(var modifier in effectEvaluatedData.ModifiersEvaluatedData)
 		{
-			targetAttributeSet.AttributesMap[modifier.Attribute].AddToBaseValue(modifier.Value);
+			switch (modifier.ModifierOperation)
+			{
+				case ModifierOperation.Add:
+					modifier.Attribute.ExecuteModifier((int)modifier.Magnitude);
+					break;
+
+				case ModifierOperation.PercentBonus:
+					modifier.Attribute.ExecutePercentBonus(modifier.Magnitude);
+					break;
+
+				case ModifierOperation.PercentPenalty:
+					modifier.Attribute.ExecutePercentPenalty(modifier.Magnitude);
+					break;
+
+				case ModifierOperation.Override:
+					modifier.Attribute.OverrideBaseValue((int)modifier.Magnitude);
+					break;
+			}
 		}
 	}
 }
 
-public class ActiveGameplayEffect
+internal class ActiveGameplayEffect
 {
 	private float _internalTime;
 
-	public GameplayEffect GameplayEffect { get; }
+	internal GameplayEffectEvaluatedData GameplayEffectEvaluatedData { get; }
 
-	public AttributeSet TargetAttributeSet { get; }
+	internal float RemainingDuration { get; private set; }
 
-	public float RemainingDuration { get; private set; }
+	internal float NextPeriodicTick { get; private set; }
 
-	public float NextPeriodicTick { get; private set; }
+	internal float ExecutionCount { get; private set; }
 
-	public float ExecutionCount { get; private set; }
-
-	public bool IsExpired => GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration &&
+	internal bool IsExpired => GameplayEffectEvaluatedData.GameplayEffect.EffectData.DurationData.Type ==
+		DurationType.HasDuration &&
 		RemainingDuration <= 0;
 
-	public ActiveGameplayEffect(GameplayEffect gameplayEffect, AttributeSet targetAttributeSet)
+	internal ActiveGameplayEffect(GameplayEffectEvaluatedData evaluatedEffectData)
 	{
-		GameplayEffect = gameplayEffect;
-		TargetAttributeSet = targetAttributeSet;
+		GameplayEffectEvaluatedData = evaluatedEffectData;
 	}
 
-	public void Apply()
+	internal void Apply()
 	{
 		_internalTime = 0;
 		ExecutionCount = 0;
-		RemainingDuration = GameplayEffect.EffectData.DurationData.Duration;
+		RemainingDuration = GameplayEffectEvaluatedData.Duration;
 
-		foreach (var modifier in GameplayEffect.EffectData.Modifiers)
+		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			if (GameplayEffect.EffectData.PeriodicData.HasValue)
+			if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
 			{
-				if (GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
+				GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
+				ExecutionCount++;
+			}
+
+			NextPeriodicTick = GameplayEffectEvaluatedData.Period;
+		}
+		else
+		{
+			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
+			{
+				switch (modifier.ModifierOperation)
 				{
-					GameplayEffect.Execute(TargetAttributeSet);
-					ExecutionCount++;
+					case ModifierOperation.Add:
+						modifier.Attribute.AddModifier((int)modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentBonus:
+						modifier.Attribute.AddPercentBonus(modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentPenalty:
+						modifier.Attribute.AddPercentPenalty(modifier.Magnitude);
+						break;
+
+					case ModifierOperation.Override:
+						throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
+							$"operation of type {ModifierOperation.Override}.");
 				}
-
-				NextPeriodicTick = GameplayEffect.EffectData.PeriodicData.Value.Period;
-			}
-			else
-			{
-				TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(modifier.Value);
 			}
 		}
 	}
 
-	public void Unapply()
+	internal void Unapply()
 	{
-		if (!GameplayEffect.EffectData.PeriodicData.HasValue)
+		if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			foreach (var modifier in GameplayEffect.EffectData.Modifiers)
+			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 			{
-				TargetAttributeSet.AttributesMap[modifier.Attribute].ApplyModifier(-modifier.Value);
+				switch (modifier.ModifierOperation)
+				{
+					case ModifierOperation.Add:
+						modifier.Attribute.AddModifier(-(int)modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentBonus:
+						modifier.Attribute.AddPercentBonus(-modifier.Magnitude);
+						break;
+
+					case ModifierOperation.PercentPenalty:
+						modifier.Attribute.AddPercentPenalty(-modifier.Magnitude);
+						break;
+
+					case ModifierOperation.Override:
+						throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
+							$"operation of type {ModifierOperation.Override}.");
+				}
 			}
 		}
 	}
 
-	public void Update(float deltaTime)
+	internal void Update(float deltaTime)
 	{
 		_internalTime += deltaTime;
 
-		if (GameplayEffect.EffectData.PeriodicData.HasValue && _internalTime >= NextPeriodicTick)
+		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue && _internalTime >= NextPeriodicTick)
 		{
-			GameplayEffect.Execute(TargetAttributeSet);
+			GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
 			ExecutionCount++;
 
-			NextPeriodicTick += GameplayEffect.EffectData.PeriodicData.Value.Period;
+			NextPeriodicTick += GameplayEffectEvaluatedData.Period;
 		}
 
-		if (GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration)
+		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration)
 		{
 			RemainingDuration -= deltaTime;
 		}
@@ -243,45 +365,39 @@ public class GameplayEffectsManager
 {
 	private readonly List<ActiveGameplayEffect> _activeEffects = new ();
 
+	private object _owner;
+
 	// Could be a list of attributeSets;
 	private AttributeSet _attributeSet;
 
-	public GameplayEffectsManager(AttributeSet ownerAttributeSet)
+	public GameplayEffectsManager(AttributeSet ownerAttributeSet, object owner)
 	{
 		_attributeSet = ownerAttributeSet;
+		_owner = owner;
 	}
 
 	public void ApplyEffect(GameplayEffect gameplayEffect)
 	{
+		var effectEvaluatedData = EvaluateModifiers(gameplayEffect, _owner);
+
 		if (gameplayEffect.EffectData.DurationData.Type != DurationType.Instant)
 		{
-			var activeEffect = new ActiveGameplayEffect(gameplayEffect, _attributeSet);
+			var activeEffect = new ActiveGameplayEffect(effectEvaluatedData);
 			_activeEffects.Add(activeEffect);
 			activeEffect.Apply();
 		}
 		else
 		{
 			// This path is called "Execute" and should work for instant effects
-			gameplayEffect.Execute(_attributeSet);
+			gameplayEffect.Execute(effectEvaluatedData);
 		}
 	}
 
-	private void ExecuteEffect(Attribute.Attribute attribute, Modifier modifier)
+	public void UnapplyEffect(GameplayEffect gameplayEffect)
 	{
-		// Do some pre-evaluations about the modifier
-		
-		//if (attribute.PreGameplayEffectExecute(modifier))
-		//{
-			// This gives a chance for the AttributeSet and others to manipulate the modifier before applying
-		//}
-
-		// This is probably a bit more complicated than that as it should use the previously calculated evaluation
-		attribute.AddToBaseValue(modifier.Value);
-
-		//attribute.PostGameplayEffectExecute(modifier);
+		//_activeEffects.Remove(gameplayEffect);
 	}
 
-	// What if the game is a turn based game?
 	public void UpdateEffects(float deltaTime)
 	{
 		foreach (var effect in _activeEffects)
@@ -290,5 +406,33 @@ public class GameplayEffectsManager
 		}
 
 		_activeEffects.RemoveAll(e => e.IsExpired);
+	}
+
+	private GameplayEffectEvaluatedData EvaluateModifiers(GameplayEffect gameplayEffect, object target)
+	{
+		var modifiersEvaluatedData = new List<ModifierEvaluatedData>();
+
+		foreach (var modifier in gameplayEffect.EffectData.Modifiers)
+		{
+			modifiersEvaluatedData.Add(new ModifierEvaluatedData
+			{
+				Attribute = _attributeSet.AttributesMap[modifier.Attribute],
+				ModifierOperation = modifier.Operation,
+				Magnitude = modifier.Value.GetValue(gameplayEffect.Level),
+			});
+		}
+
+		return new GameplayEffectEvaluatedData()
+		{
+			GameplayEffect = gameplayEffect,
+			ModifiersEvaluatedData = modifiersEvaluatedData,
+			Level = gameplayEffect.Level,
+			Stack = gameplayEffect.EffectData.StackingData.HasValue ?
+				gameplayEffect.EffectData.StackingData.Value.StackLimit.GetValue(gameplayEffect.Level) : 0,
+			Duration = gameplayEffect.EffectData.DurationData.Duration.GetValue(gameplayEffect.Level),
+			Period = gameplayEffect.EffectData.PeriodicData.HasValue ?
+				gameplayEffect.EffectData.PeriodicData.Value.Period.GetValue(gameplayEffect.Level) : 0,
+			Target = target,
+		};
 	}
 }
