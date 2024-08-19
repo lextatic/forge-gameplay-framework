@@ -17,8 +17,6 @@ public class AttributeSetTests
 
 		Assert.AreEqual(0, attribute.BaseValue);
 		Assert.AreEqual(0, attribute.Modifier);
-		Assert.AreEqual(0, attribute.PercentBonus);
-		Assert.AreEqual(0, attribute.PercentPenalty);
 		Assert.AreEqual(0, attribute.Overflow);
 		Assert.AreEqual(int.MinValue, attribute.Min);
 		Assert.AreEqual(int.MaxValue, attribute.Max);
@@ -34,8 +32,6 @@ public class AttributeSetTests
 
 		Assert.AreEqual(5, attribute.BaseValue);
 		Assert.AreEqual(0, attribute.Modifier);
-		Assert.AreEqual(0, attribute.PercentBonus);
-		Assert.AreEqual(0, attribute.PercentPenalty);
 		Assert.AreEqual(0, attribute.Overflow);
 		Assert.AreEqual(0, attribute.Min);
 		Assert.AreEqual(10, attribute.Max);

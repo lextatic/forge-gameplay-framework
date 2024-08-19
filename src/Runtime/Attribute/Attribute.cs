@@ -1,7 +1,17 @@
 #pragma warning disable SA1600
 using GameplayTags.Runtime.GameplayEffect;
+using System.Threading.Channels;
 
 namespace GameplayTags.Runtime.Attribute;
+
+public class ChannelData
+{
+	public int? Override { get; set; }
+
+	public int FlatModifier { get; set; }
+
+	public float PercentModifier { get; set; }
+}
 
 public sealed class Attribute
 {
@@ -11,22 +21,19 @@ public sealed class Attribute
 
 	public event Action<Attribute, GameplayEffectEvaluatedData>? OnPostGameplayEffectExecute;
 
+	private readonly List<ChannelData> _channels = new();
+
 	public int BaseValue { get; private set; }
 
 	public int Max { get; private set; }
 
 	public int Min { get; private set; }
 
-
 	/// <summary>
 	/// Gets the total modifier value kept so we can make Status Effect application consise, but this value could be
 	/// clamped and thus having an invalid part.
 	/// </summary>
 	public int Modifier { get; private set; }
-
-	public float PercentBonus { get; private set; }
-
-	public float PercentPenalty { get; private set; }
 
 	public int Overflow { get; private set; }
 
@@ -39,12 +46,17 @@ public sealed class Attribute
 		BaseValue = 0;
 		Modifier = 0;
 		Overflow = 0;
-		PercentBonus = 0;
-		PercentPenalty = 0;
 		TotalValue = 0;
+
+		_channels.Add(new ChannelData
+		{
+			Override = null,
+			FlatModifier = 0,
+			PercentModifier = 1,
+		});
 	}
 
-	internal void Initialize(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
+	internal void Initialize(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue, int channels = 0)
 	{
 		if (minValue > maxValue)
 		{
@@ -63,8 +75,6 @@ public sealed class Attribute
 		BaseValue = defaultValue;
 		Modifier = 0;
 		Overflow = 0;
-		PercentBonus = 0;
-		PercentPenalty = 0;
 		TotalValue = BaseValue;
 	}
 
@@ -110,7 +120,7 @@ public sealed class Attribute
 		}
 	}
 
-	internal void OverrideBaseValue(int newValue)
+	internal void ExecuteOverride(int newValue)
 	{
 		int oldValue = TotalValue;
 
@@ -124,7 +134,7 @@ public sealed class Attribute
 		}
 	}
 
-	internal void ExecuteModifier(int value)
+	internal void ExecuteFlatModifier(int value)
 	{
 		int oldValue = TotalValue;
 
@@ -138,13 +148,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void ExecutePercentBonus(float percentBonus)
+	internal void ExecutePercentModifier(float value)
 	{
-		System.Diagnostics.Debug.Assert(percentBonus > 0, $"percentBonus:({percentBonus}) must be higher than 0.");
-
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Clamp((int)(BaseValue * (1 + percentBonus)), Min, Max);
+		BaseValue = Math.Clamp((int)(BaseValue * (1 + value)), Min, Max);
 
 		UpdateCachedValues();
 
@@ -154,13 +162,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void ExecutePercentPenalty(float percentPenalty)
+	internal void AddOverride(int value, int channel)
 	{
-		System.Diagnostics.Debug.Assert(percentPenalty > 0, $"percentBonus:({percentPenalty}) must be higher than 0.");
-
 		int oldValue = TotalValue;
 
-		BaseValue = Math.Clamp((int)(BaseValue * (1 - percentPenalty)), Min, Max);
+		_channels[channel].Override = value;
 
 		UpdateCachedValues();
 
@@ -170,11 +176,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void AddModifier(int value)
+	internal void ClearOverride(int channel)
 	{
 		int oldValue = TotalValue;
 
-		Modifier += value;
+		_channels[channel].Override = null;
 
 		UpdateCachedValues();
 
@@ -184,13 +190,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void AddPercentBonus(float percentBonus)
+	internal void AddFlatModifier(int value, int channel)
 	{
-		System.Diagnostics.Debug.Assert(percentBonus > 0, $"percentBonus:({percentBonus}) must be higher than 0.");
-
 		int oldValue = TotalValue;
 
-		PercentBonus += percentBonus;
+		_channels[channel].FlatModifier += value;
 
 		UpdateCachedValues();
 
@@ -200,13 +204,11 @@ public sealed class Attribute
 		}
 	}
 
-	internal void AddPercentPenalty(float percentPenalty)
+	internal void AddPercentModifier(float value, int channel)
 	{
-		System.Diagnostics.Debug.Assert(percentPenalty > 0, $"percentBonus:({percentPenalty}) must be higher than 0.");
-
 		int oldValue = TotalValue;
 
-		PercentPenalty += percentPenalty;
+		_channels[channel].PercentModifier += value;
 
 		UpdateCachedValues();
 
@@ -233,12 +235,25 @@ public sealed class Attribute
 
 	private void UpdateCachedValues()
 	{
-		var evaluatedValue = (int)((BaseValue + Modifier) * (1f + PercentBonus) * (1f - PercentPenalty));
-		TotalValue = Math.Clamp(evaluatedValue, Min, Max);
+		var evaluatedValue = (float)BaseValue;
+
+		foreach (var channel in _channels)
+		{
+			if (channel.Override.HasValue)
+			{
+				evaluatedValue = channel.Override.Value;
+				continue;
+			}
+
+			evaluatedValue = (BaseValue + channel.FlatModifier) * channel.PercentModifier;
+		}
+
+		TotalValue = Math.Clamp((int)evaluatedValue, Min, Max);
+		Modifier = (int)evaluatedValue - BaseValue;
 
 		if (evaluatedValue > Max)
 		{
-			Overflow = evaluatedValue - Max;
+			Overflow = (int)evaluatedValue - Max;
 		}
 		else
 		{

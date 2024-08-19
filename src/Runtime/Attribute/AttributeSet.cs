@@ -66,11 +66,11 @@ public abstract class AttributeSet
 
 	protected void SetAttributeBaseValue(Attribute attribute, int newValue)
 	{
-		attribute.OverrideBaseValue(newValue);
+		attribute.ExecuteOverride(newValue);
 	}
 
 	protected void AddToAttributeBaseValue(Attribute attribute, int value)
 	{
-		attribute.ExecuteModifier(value);
+		attribute.ExecuteFlatModifier(value);
 	}
 }

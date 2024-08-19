@@ -16,6 +16,13 @@ public enum StackLevelPolicy : byte
 	SegregateLevels,
 }
 
+public enum StackMagnitudePolicy : byte
+{
+	DontStack,
+	Sum,
+	Multiply,
+}
+
 public enum StackLevelOverridePolicy : byte
 {
 	AlwaysKeep,
@@ -47,6 +54,7 @@ public struct StackingData
 	public ScalableInt StackLimit; // All stackable effects
 	public StackPolicy StackPolicy; // All stackable effects
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
+	public StackMagnitudePolicy StackMagnitudePolicy; // All stackable effects
 	public StackExpirationPolicy StackExpirationPolicy; // Aff stackable effects, infinite effects removal will count as expiration
 	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
 	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking == AggregateLevels
@@ -55,9 +63,8 @@ public struct StackingData
 
 public enum ModifierOperation : byte
 {
-	Add,
-	PercentBonus,
-	PercentPenalty,
+	Flat,
+	Percent,
 	Override,
 }
 
@@ -110,16 +117,6 @@ public class GameplayEffectData // Immutable
 		DurationData = durationData;
 		StackingData = stackingData;
 		PeriodicData = periodicData;
-
-		foreach (var modifier in Modifiers)
-		{
-			if ((modifier.Operation == ModifierOperation.PercentBonus ||
-				modifier.Operation == ModifierOperation.PercentPenalty) &&
-				modifier.Value.BaseValue < 0)
-			{
-				throw new ArgumentException($"{modifier.Operation} cannot have negative values.");
-			}
-		}
 
 		// Should I really throw? Or just ignore (force null) the periodic data?
 		if (periodicData.HasValue && durationData.Type == DurationType.Instant)
@@ -226,20 +223,16 @@ public class GameplayEffect
 		{
 			switch (modifier.ModifierOperation)
 			{
-				case ModifierOperation.Add:
-					modifier.Attribute.ExecuteModifier((int)modifier.Magnitude);
+				case ModifierOperation.Flat:
+					modifier.Attribute.ExecuteFlatModifier((int)modifier.Magnitude);
 					break;
 
-				case ModifierOperation.PercentBonus:
-					modifier.Attribute.ExecutePercentBonus(modifier.Magnitude);
-					break;
-
-				case ModifierOperation.PercentPenalty:
-					modifier.Attribute.ExecutePercentPenalty(modifier.Magnitude);
+				case ModifierOperation.Percent:
+					modifier.Attribute.ExecutePercentModifier(modifier.Magnitude);
 					break;
 
 				case ModifierOperation.Override:
-					modifier.Attribute.OverrideBaseValue((int)modifier.Magnitude);
+					modifier.Attribute.ExecuteOverride((int)modifier.Magnitude);
 					break;
 			}
 		}
@@ -289,21 +282,17 @@ internal class ActiveGameplayEffect
 			{
 				switch (modifier.ModifierOperation)
 				{
-					case ModifierOperation.Add:
-						modifier.Attribute.AddModifier((int)modifier.Magnitude);
+					case ModifierOperation.Flat:
+						modifier.Attribute.AddFlatModifier((int)modifier.Magnitude, 0);
 						break;
 
-					case ModifierOperation.PercentBonus:
-						modifier.Attribute.AddPercentBonus(modifier.Magnitude);
-						break;
-
-					case ModifierOperation.PercentPenalty:
-						modifier.Attribute.AddPercentPenalty(modifier.Magnitude);
+					case ModifierOperation.Percent:
+						modifier.Attribute.AddPercentModifier(modifier.Magnitude, 0);
 						break;
 
 					case ModifierOperation.Override:
-						throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
-							$"operation of type {ModifierOperation.Override}.");
+						modifier.Attribute.AddOverride((int)modifier.Magnitude, 0);
+						break;
 				}
 			}
 		}
@@ -317,21 +306,17 @@ internal class ActiveGameplayEffect
 			{
 				switch (modifier.ModifierOperation)
 				{
-					case ModifierOperation.Add:
-						modifier.Attribute.AddModifier(-(int)modifier.Magnitude);
+					case ModifierOperation.Flat:
+						modifier.Attribute.AddFlatModifier(-(int)modifier.Magnitude, 0);
 						break;
 
-					case ModifierOperation.PercentBonus:
-						modifier.Attribute.AddPercentBonus(-modifier.Magnitude);
-						break;
-
-					case ModifierOperation.PercentPenalty:
-						modifier.Attribute.AddPercentPenalty(-modifier.Magnitude);
+					case ModifierOperation.Percent:
+						modifier.Attribute.AddPercentModifier(-modifier.Magnitude, 0);
 						break;
 
 					case ModifierOperation.Override:
-						throw new ArgumentException($"Only {DurationType.Instant} or Periodic effects can have" +
-							$"operation of type {ModifierOperation.Override}.");
+						modifier.Attribute.ClearOverride(0);
+						break;
 				}
 			}
 		}
