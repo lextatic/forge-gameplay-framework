@@ -56,7 +56,7 @@ public sealed class Attribute
 		});
 	}
 
-	internal void Initialize(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue, int channels = 0)
+	internal void Initialize(int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue, int channels = 1)
 	{
 		if (minValue > maxValue)
 		{
@@ -70,12 +70,27 @@ public sealed class Attribute
 			throw new ArgumentException("DefaultValue should be withing MinValue and MaxValue.");
 		}
 
+		if (_channels.Count < 1)
+		{
+			throw new ArgumentException("There should be at least one channel.");
+		}
+
 		Min = minValue;
 		Max = maxValue;
 		BaseValue = defaultValue;
 		Modifier = 0;
 		Overflow = 0;
 		TotalValue = BaseValue;
+
+		for (int i = 0; i < channels - 1; i++)
+		{
+			_channels.Add(new ChannelData
+			{
+				Override = null,
+				FlatModifier = 0,
+				PercentModifier = 1,
+			});
+		}
 	}
 
 	internal void SetMaxValue(int newMaxValue)
@@ -245,7 +260,7 @@ public sealed class Attribute
 				continue;
 			}
 
-			evaluatedValue = (BaseValue + channel.FlatModifier) * channel.PercentModifier;
+			evaluatedValue = (evaluatedValue + channel.FlatModifier) * channel.PercentModifier;
 		}
 
 		TotalValue = Math.Clamp((int)evaluatedValue, Min, Max);

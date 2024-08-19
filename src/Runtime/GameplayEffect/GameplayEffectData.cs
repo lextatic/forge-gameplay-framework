@@ -1,4 +1,5 @@
 using GameplayTags.Runtime.Attribute;
+using System.Threading.Channels;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GameplayTags.Runtime.GameplayEffect;
@@ -73,6 +74,7 @@ public struct Modifier
 	public TagName Attribute;
 	public ModifierOperation Operation;
 	public ScalableFloat Value;
+	public int Channel;
 }
 
 public enum DurationType : byte
@@ -188,6 +190,7 @@ public struct ModifierEvaluatedData
 	public Attribute.Attribute Attribute;
 	public ModifierOperation ModifierOperation;
 	public float Magnitude;
+	public int Channel;
 	public bool IsValid; // remove if not used
 }
 
@@ -283,15 +286,15 @@ internal class ActiveGameplayEffect
 				switch (modifier.ModifierOperation)
 				{
 					case ModifierOperation.Flat:
-						modifier.Attribute.AddFlatModifier((int)modifier.Magnitude, 0);
+						modifier.Attribute.AddFlatModifier((int)modifier.Magnitude, modifier.Channel);
 						break;
 
 					case ModifierOperation.Percent:
-						modifier.Attribute.AddPercentModifier(modifier.Magnitude, 0);
+						modifier.Attribute.AddPercentModifier(modifier.Magnitude, modifier.Channel);
 						break;
 
 					case ModifierOperation.Override:
-						modifier.Attribute.AddOverride((int)modifier.Magnitude, 0);
+						modifier.Attribute.AddOverride((int)modifier.Magnitude, modifier.Channel);
 						break;
 				}
 			}
@@ -307,15 +310,15 @@ internal class ActiveGameplayEffect
 				switch (modifier.ModifierOperation)
 				{
 					case ModifierOperation.Flat:
-						modifier.Attribute.AddFlatModifier(-(int)modifier.Magnitude, 0);
+						modifier.Attribute.AddFlatModifier(-(int)modifier.Magnitude, modifier.Channel);
 						break;
 
 					case ModifierOperation.Percent:
-						modifier.Attribute.AddPercentModifier(-modifier.Magnitude, 0);
+						modifier.Attribute.AddPercentModifier(-modifier.Magnitude, modifier.Channel);
 						break;
 
 					case ModifierOperation.Override:
-						modifier.Attribute.ClearOverride(0);
+						modifier.Attribute.ClearOverride(modifier.Channel);
 						break;
 				}
 			}
@@ -404,6 +407,7 @@ public class GameplayEffectsManager
 				Attribute = _attributeSet.AttributesMap[modifier.Attribute],
 				ModifierOperation = modifier.Operation,
 				Magnitude = modifier.Value.GetValue(gameplayEffect.Level),
+				Channel = modifier.Channel,
 			});
 		}
 

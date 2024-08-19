@@ -49,9 +49,14 @@ public abstract class AttributeSet
 
 	protected virtual void Attribute_OnValueChanged(Attribute attribute, int change) { }
 
-	protected void InitializeAttribute(Attribute attribute, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
+	protected void InitializeAttribute(
+		Attribute attribute,
+		int defaultValue,
+		int minValue = int.MinValue,
+		int maxValue = int.MaxValue,
+		int channels = 0)
 	{
-		attribute.Initialize(defaultValue, minValue, maxValue);
+		attribute.Initialize(defaultValue, minValue, maxValue, channels);
 	}
 
 	protected void SetAttributeMaxValue(Attribute attribute, int maxValue)

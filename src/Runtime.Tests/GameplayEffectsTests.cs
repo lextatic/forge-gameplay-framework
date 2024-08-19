@@ -341,6 +341,57 @@ public class GameplayEffectsTests
 	}
 
 	[TestMethod]
+	public void Infinite_effect_should_compute_channels_accordingly()
+	{
+		var owner = new object();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+				Duration = new ScalableFloat(0),
+			},
+			null,
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Flat,
+			Value = new ScalableFloat(4),
+		});
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Percent,
+			Value = new ScalableFloat(4), // 400% bonus
+		});
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Percent,
+			Value = new ScalableFloat(-0.66f), // Divide by 3 (-66%)
+			Channel = 1,
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+
+		var playerAttributes = new PlayerAttributeSet();
+
+		var manager = new GameplayEffectsManager(playerAttributes, owner);
+
+		manager.ApplyEffect(effect);
+
+		Assert.AreEqual(8, playerAttributes.Strength.TotalValue);
+		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
+		Assert.AreEqual(7, playerAttributes.Strength.Modifier);
+		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+	}
+
+	[TestMethod]
 	public void Duration_effect_should_modify_attribute_modifier_value_and_expire_after_duration_time()
 	{
 		var owner = new object();
@@ -626,7 +677,7 @@ public class GameplayEffectsTests
 
 		protected override void InitializeAttributes()
 		{
-			InitializeAttribute(Strength, 1, 0, 99);
+			InitializeAttribute(Strength, 1, 0, 99, 2);
 			InitializeAttribute(Intelligence, 1, 0, 99);
 			InitializeAttribute(Dexterity, 1, 0, 99);
 			InitializeAttribute(Vitality, 1, 0, 99);
