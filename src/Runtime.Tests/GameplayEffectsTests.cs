@@ -11,14 +11,14 @@ public class GameplayEffectsTests
 	[TestMethod]
 	public void Instant_effect_should_modify_attribute_base_value()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Level Up",
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -27,34 +27,91 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
+	}
 
-		manager.ApplyEffect(effect);
+	[TestMethod]
+	public void Attribute_based_effect_should_modify_values_accordinly()
+	{
+		var instigator = new Entity();
+		var target = new Entity();
 
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		var effectData = new GameplayEffectData(
+			"Level Up",
+			new DurationData
+			{
+				Type = DurationType.Instant,
+			},
+			null,
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+			Operation = ModifierOperation.Flat,
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.AttributeBased,
+				AttributeBasedFloat = new AttributeBasedFloat
+				{
+					BackingAttribute = new AttributeCaptureDefinition
+					{
+						Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
+						Source = AttributeCaptureSource.Source,
+						Snapshot = true,
+					},
+					AttributeCalculationType = AttributeBasedFloatCalculationType.AttributeBaseValue,
+					Coeficient = new ScalableFloat(2),
+					PreMultiplyAdditiveValue = new ScalableFloat(1),
+					PostMultiplyAdditiveValue = new ScalableFloat(2),
+					// ((1 + 1) * 2) + 2 = 6
+				},
+			},
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+
+		Assert.AreEqual(7, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(7, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Instant_effect_of_different_operations_should_modify_base_value_accordingly()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Level Up",
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -63,28 +120,31 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(4),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(4),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(5, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(5, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(5, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(5, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		var effectData2 = new GameplayEffectData(
 			"Rank Up",
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -93,24 +153,31 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Percent,
-			Value = new ScalableFloat(4), // 400% bonus
+			Magnitude = new ModifierMagnitude // 400% bonus
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(4),
+			},
 		});
 
-		var effect2 = new GameplayEffect.GameplayEffect(effectData2, 1, new GameplayEffectContext());
+		var effect2 = new GameplayEffect.GameplayEffect(effectData2, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		manager.ApplyEffect(effect2);
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
 
-		Assert.AreEqual(25, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(25, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(25, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(25, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		var effectData3 = new GameplayEffectData(
 			"Rank Down",
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -119,24 +186,31 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Percent,
-			Value = new ScalableFloat(-0.66f), // Divides by 3 (66% reduction)
+			Magnitude = new ModifierMagnitude // Divides by 3 (66% reduction)
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(-0.66f),
+			},
 		});
 
-		var effect3 = new GameplayEffect.GameplayEffect(effectData3, 1, new GameplayEffectContext());
+		var effect3 = new GameplayEffect.GameplayEffect(effectData3, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		manager.ApplyEffect(effect3);
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
 
-		Assert.AreEqual(8, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(8, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(8, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(8, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		var effectData4 = new GameplayEffectData(
 			"Rank Fix",
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -145,30 +219,38 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Override,
-			Value = new ScalableFloat(42),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(42),
+			},
 		});
 
-		var effect4 = new GameplayEffect.GameplayEffect(effectData4, 1, new GameplayEffectContext());
+		var effect4 = new GameplayEffect.GameplayEffect(effectData4, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		manager.ApplyEffect(effect4);
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect4);
 
-		Assert.AreEqual(42, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(42, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(42, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(42, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Higher_level_effect_should_apply_higher_level_modifier()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Level Up",
 			new DurationData
 			{
 				Type = DurationType.Instant,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -177,45 +259,49 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10)
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10)
 				.AddKey(1, 1)
 				.AddKey(2, 2),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		effect.LevelUp();
 
-		manager.ApplyEffect(effect);
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		Assert.AreEqual(31, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(31, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(31, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(31, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Inifinite_effect_should_modify_attribute_modifier_value()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -224,45 +310,49 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate 5 seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			manager.UpdateEffects(0.03125f);
+			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Infinite_effect_of_different_operations_should_modify_modifier_and_multiplier_value_accordingly()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -271,28 +361,31 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(4),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(4),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(5, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(4, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(5, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(4, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		var effectData2 = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -301,24 +394,31 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Percent,
-			Value = new ScalableFloat(4), // 400% bonus
+			Magnitude = new ModifierMagnitude // 400% bonus
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(4),
+			},
 		});
 
-		var effect2 = new GameplayEffect.GameplayEffect(effectData2, 1, new GameplayEffectContext());
+		var effect2 = new GameplayEffect.GameplayEffect(effectData2, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		manager.ApplyEffect(effect2);
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
 
-		Assert.AreEqual(25, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(24, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(25, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(24, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		var effectData3 = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -327,30 +427,38 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Percent,
-			Value = new ScalableFloat(-0.66f), // Divide by 3 (-66%)
+			Magnitude = new ModifierMagnitude // Divide by 3 (-66%)
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(-0.66f),
+			},
 		});
 
-		var effect3 = new GameplayEffect.GameplayEffect(effectData3, 1, new GameplayEffectContext());
+		var effect3 = new GameplayEffect.GameplayEffect(effectData3, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		manager.ApplyEffect(effect3);
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
 
-		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(20, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(20, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Infinite_effect_should_compute_channels_accordingly()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			null);
@@ -359,42 +467,55 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(4),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(4),
+			},
 		});
 
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Percent,
-			Value = new ScalableFloat(4), // 400% bonus
+			Magnitude = new ModifierMagnitude // 400% bonus
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(4),
+			},
 		});
 
 		effectData.Modifiers.Add(new Modifier
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Percent,
-			Value = new ScalableFloat(-0.66f), // Divide by 3 (-66%)
+			Magnitude = new ModifierMagnitude // Divide by 3 (-66%)
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(-0.66f),
+			},
 			Channel = 1,
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(8, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(7, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(8, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(7, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Duration_effect_should_modify_attribute_modifier_value_and_expire_after_duration_time()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
@@ -410,56 +531,60 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate 5 seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			manager.UpdateEffects(0.03125f);
+			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			manager.UpdateEffects(0.03125f);
+			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
-		Assert.AreEqual(1, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Periodic_effect_should_modify_base_attribute_value()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			new PeriodicData
@@ -472,53 +597,57 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate for 1 turn or seconds
-		manager.UpdateEffects(1);
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
 
-		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			manager.UpdateEffects(0.03125f);
+			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
-		Assert.AreEqual(71, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(71, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(71, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(71, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Periodic_effect_should_modify_base_attribute_with_same_value_even_after_level_up()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			null,
 			new PeriodicData
@@ -531,36 +660,41 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		effect.LevelUp();
 		// Simulate for 1 turn or seconds
-		manager.UpdateEffects(1);
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
 
-		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Periodic_effect_should_modify_base_attribute_value_and_expire_after_duration_time()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
@@ -580,53 +714,57 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(11, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate for 1 turn or seconds
-		manager.UpdateEffects(1);
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
 
-		Assert.AreEqual(21, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(21, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			manager.UpdateEffects(0.03125f);
+			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
-		Assert.AreEqual(41, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(41, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(0, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(41, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(41, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	[TestMethod]
 	public void Effect_should_stack_values()
 	{
-		var owner = new object();
+		var instigator = new Entity();
+		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
 			"Buff",
 			new DurationData
 			{
 				Type = DurationType.Infinite,
-				Duration = new ScalableFloat(0),
 			},
 			new StackingData
 			{
@@ -644,21 +782,25 @@ public class GameplayEffectsTests
 		{
 			Attribute = TagName.FromString("PlayerAttributeSet.Strength"),
 			Operation = ModifierOperation.Flat,
-			Value = new ScalableFloat(10),
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
 		});
 
-		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext());
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
 
-		var playerAttributes = new PlayerAttributeSet();
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
 
-		var manager = new GameplayEffectsManager(playerAttributes, owner);
-
-		manager.ApplyEffect(effect);
-
-		Assert.AreEqual(11, playerAttributes.Strength.TotalValue);
-		Assert.AreEqual(1, playerAttributes.Strength.BaseValue);
-		Assert.AreEqual(10, playerAttributes.Strength.Modifier);
-		Assert.AreEqual(0, playerAttributes.Strength.Overflow);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Strength.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Strength.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Strength.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Strength.Overflow);
 	}
 
 	private class PlayerAttributeSet : AttributeSet
@@ -684,5 +826,20 @@ public class GameplayEffectsTests
 			InitializeAttribute(Agility, 1, 0, 99);
 			InitializeAttribute(Luck, 1, 0, 99);
 		}
+	}
+
+	private class Entity : IGameplaySystem
+	{
+		public GameplaySystem GameplaySystem { get; }
+		
+		public PlayerAttributeSet PlayerAttributeSet { get; }
+
+		public Entity()
+		{
+			GameplaySystem = new GameplaySystem();
+			PlayerAttributeSet = new PlayerAttributeSet();
+			GameplaySystem.AddAttributeSet(PlayerAttributeSet);
+		}
+
 	}
 }

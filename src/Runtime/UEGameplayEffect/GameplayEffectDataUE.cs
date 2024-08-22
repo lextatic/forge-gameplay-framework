@@ -58,11 +58,11 @@ public class GameplayEffectDataUE
 
 	public int StackLimitCount;
 
-	public GameplayEffectStackingDurationPolicy StackDurationRefreshPolicy;
+	//public GameplayEffectStackingDurationPolicy StackDurationRefreshPolicy;
 
-	public GameplayEffectStackingPeriodPolicy StackPeriodResetPolicy;
+	//public GameplayEffectStackingPeriodPolicy StackPeriodResetPolicy;
 
-	public GameplayEffectStackingExpirationPolicy StackExpirationPolicy;
+	//public GameplayEffectStackingExpirationPolicy StackExpirationPolicy;
 
 	// Cached
 
@@ -82,21 +82,21 @@ public class GameplayEffectDataUE
 		PeriodicInhibitionPolicy = GameplayEffectPeriodInhibitionRemovedPolicy.NeverReset;
 		StackingType = GameplayEffectStackingType.None;
 		StackLimitCount = 0;
-		StackDurationRefreshPolicy = GameplayEffectStackingDurationPolicy.RefreshOnSuccessfulApplication;
-		StackPeriodResetPolicy = GameplayEffectStackingPeriodPolicy.ResetOnSuccessfulApplication;
+		//StackDurationRefreshPolicy = GameplayEffectStackingDurationPolicy.RefreshOnSuccessfulApplication;
+		//StackPeriodResetPolicy = GameplayEffectStackingPeriodPolicy.ResetOnSuccessfulApplication;
 		RequireModifierSuccessToTriggerCues = true;
 	}
 }
 
 public struct GameplayEffectModifierMagnitude 
 {
-	GameplayEffectMagnitudeCalculation MagnitudeCalculationType;
+	//GameplayEffectMagnitudeCalculation MagnitudeCalculationType;
 
 	ScalableFloat ScalableFloatMagnitude;
 
 	/** Magnitude value represented by an attribute-based float
 	(Coefficient * (PreMultiplyAdditiveValue + [Eval'd Attribute Value According to Policy])) + PostMultiplyAdditiveValue */
-	AttributeBasedFloat AttributeBasedMagnitude;
+	AttributeBasedFloatUE AttributeBasedMagnitude;
 
 	/** Magnitude value represented by a custom calculation class */
 	CustomCalculationBasedFloat CustomMagnitude;
@@ -109,7 +109,7 @@ public struct GameplayEffectModifierMagnitude
  * Struct representing a float whose magnitude is dictated by a backing attribute and a calculation policy, follows basic form of:
  * (Coefficient * (PreMultiplyAdditiveValue + [Eval'd Attribute Value According to Policy])) + PostMultiplyAdditiveValue
  */
-struct AttributeBasedFloat
+struct AttributeBasedFloatUE
 {
 	/** Coefficient to the attribute calculation */
 	ScalableFloat Coefficient;
@@ -231,5 +231,3 @@ public struct GameplayModifierInfo
 	//bool operator ==(const FGameplayModifierInfo& Other) const;
 	//bool operator !=(const FGameplayModifierInfo& Other) const;
 }
-
-

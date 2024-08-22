@@ -248,6 +248,24 @@ public sealed class Attribute
 		OnPostGameplayEffectExecute?.Invoke(this, modifier);
 	}
 
+	internal float CalculateMagnitudeUpToChannel(int finalChanel)
+	{
+		var evaluatedValue = (float)BaseValue;
+
+		for (int i = 0; i < finalChanel; i++)
+		{
+			if (_channels[i].Override.HasValue)
+			{
+				evaluatedValue = _channels[i].Override.Value;
+				continue;
+			}
+
+			evaluatedValue = (evaluatedValue + _channels[i].FlatModifier) * _channels[i].PercentModifier;
+		}
+
+		return Math.Clamp((int)evaluatedValue, Min, Max);
+	}
+
 	private void UpdateCachedValues()
 	{
 		var evaluatedValue = (float)BaseValue;
