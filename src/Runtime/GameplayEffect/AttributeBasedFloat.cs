@@ -25,6 +25,11 @@ public struct AttributeCaptureDefinition
 	public AttributeCaptureSource Source;
 
 	public bool Snapshot; // Only Infinite and HasDuration effects can snapshot
+
+	public Attribute.Attribute GetAttribute(GameplaySystem source)
+	{
+		return source.Attributes[Attribute];
+	}
 }
 
 public class AttributeBasedFloat

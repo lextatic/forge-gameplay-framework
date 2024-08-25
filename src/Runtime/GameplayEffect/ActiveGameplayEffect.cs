@@ -21,7 +21,7 @@ internal class ActiveGameplayEffect
 		GameplayEffectEvaluatedData = evaluatedEffectData;
 	}
 
-	internal void Apply()
+	internal void Apply(bool reApplication = false)
 	{
 		_internalTime = 0;
 		ExecutionCount = 0;
@@ -29,15 +29,16 @@ internal class ActiveGameplayEffect
 
 		foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 		{
-			if (!modifier.Snapshot)
+			if (!modifier.Snapshot && !reApplication)
 			{
-				modifier.Attribute.OnValueChanged += Attribute_OnValueChanged;
+				modifier.BackingAttribute.OnValueChanged += Attribute_OnValueChanged;
 			}
 		}
 
 		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication)
+			if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication &&
+				!reApplication)
 			{
 				GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
 				ExecutionCount++;
@@ -67,7 +68,7 @@ internal class ActiveGameplayEffect
 		}
 	}
 
-	internal void Unapply()
+	internal void Unapply(bool reApplication = false)
 	{
 		if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
@@ -86,6 +87,17 @@ internal class ActiveGameplayEffect
 					case ModifierOperation.Override:
 						modifier.Attribute.ClearOverride(modifier.Channel);
 						break;
+				}
+			}
+		}
+
+		if (!reApplication)
+		{
+			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
+			{
+				if (!modifier.Snapshot)
+				{
+					modifier.BackingAttribute.OnValueChanged -= Attribute_OnValueChanged;
 				}
 			}
 		}
@@ -116,14 +128,14 @@ internal class ActiveGameplayEffect
 
 	private void ReEvaluateAndReApply()
 	{
-		Unapply();
+		Unapply(true);
 
 		GameplayEffectEvaluatedData =
 			new GameplayEffectEvaluatedData(
 				GameplayEffectEvaluatedData.GameplayEffect,
 				GameplayEffectEvaluatedData.Target);
 
-		Apply();
+		Apply(true);
 	}
 
 	private void Attribute_OnValueChanged(Attribute.Attribute _, int __)

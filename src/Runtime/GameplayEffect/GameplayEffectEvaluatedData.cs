@@ -6,6 +6,7 @@ public struct ModifierEvaluatedData
 	public ModifierOperation ModifierOperation;
 	public float Magnitude;
 	public int Channel;
+	public Attribute.Attribute? BackingAttribute;
 	public bool Snapshot;
 	//public bool IsValid; // remove if not used
 }
@@ -26,6 +27,7 @@ public struct GameplayEffectEvaluatedData
 
 		foreach (var modifier in gameplayEffect.EffectData.Modifiers)
 		{
+			// This is totally not legible
 			modifiersEvaluatedData.Add(new ModifierEvaluatedData
 			{
 				Attribute = target.Attributes[modifier.Attribute],
@@ -35,6 +37,12 @@ public struct GameplayEffectEvaluatedData
 				Snapshot = gameplayEffect.EffectData.DurationData.Type == DurationType.Instant ||
 					modifier.Magnitude.MagnitudeCalculationType != MagnitudeCalculationType.AttributeBased ||
 					modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot,
+				BackingAttribute = gameplayEffect.EffectData.DurationData.Type != DurationType.Instant &&
+					modifier.Magnitude.MagnitudeCalculationType == MagnitudeCalculationType.AttributeBased &&
+					!modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot ?
+					modifier.Magnitude.AttributeBasedFloat.BackingAttribute.GetAttribute(
+						modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Source == AttributeCaptureSource.Source ?
+						gameplayEffect.Context.Instigator.GameplaySystem : target) : null,
 			});
 		}
 
