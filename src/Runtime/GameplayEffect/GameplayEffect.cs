@@ -8,16 +8,33 @@ public struct GameplayEffectContext
 
 public class GameplayEffect
 {
+	private int _level;
+
+	public event Action<int> OnLevelChanged;
+
 	public GameplayEffectData EffectData { get; }
 
-	public int Level { get; set; }
+	// Maybe this should be a method since it fires an event
+	public int Level
+	{
+		get
+		{
+			return _level;
+		}
+
+		set
+		{
+			_level = value;
+			OnLevelChanged?.Invoke(value);
+		}
+	}
 
 	public GameplayEffectContext Context { get; }
 
 	public GameplayEffect(GameplayEffectData effectData, int level, GameplayEffectContext context)
 	{
 		EffectData = effectData;
-		Level = level;
+		_level = level;
 		Context = context;
 	}
 

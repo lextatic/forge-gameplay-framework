@@ -292,6 +292,124 @@ public class GameplayEffectsTests
 	}
 
 	[TestMethod]
+	public void Non_snapshot_level_effect_should_update_value_on_level_up()
+	{
+		var instigator = new Entity();
+		var target = new Entity();
+
+		var effectData = new GameplayEffectData(
+			"Level Up",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+			},
+			null,
+			null,
+			false);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("TestAttributeSet.Attribute1"),
+			Operation = ModifierOperation.Flat,
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10)
+					.AddKey(1, 1)
+					.AddKey(2, 2),
+			},
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+
+		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		effect.LevelUp();
+
+		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(20, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+	}
+
+	[TestMethod]
+	public void Non_snapshot_level_periodic_effect_should_update_scalable_float_values_on_level_up()
+	{
+		var instigator = new Entity();
+		var target = new Entity();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+			},
+			null,
+			new PeriodicData
+			{
+				ExecuteOnApplication = true,
+				Period = new ScalableFloat(1)
+					.AddKey(1, 1)
+					.AddKey(2, 0.5f),
+			},
+			false);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("TestAttributeSet.Attribute1"),
+			Operation = ModifierOperation.Flat,
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10)
+					.AddKey(1, 1)
+					.AddKey(2, 2),
+			},
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+
+		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		// Simulate for 1 turn or seconds
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+
+		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		effect.LevelUp();
+
+		// Simulate 1.5 more second (3 periods)
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.5f);
+
+		// 21 + (20 * 3)
+		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+	}
+
+	[TestMethod]
 	public void Inifinite_effect_should_modify_attribute_modifier_value()
 	{
 		var instigator = new Entity();

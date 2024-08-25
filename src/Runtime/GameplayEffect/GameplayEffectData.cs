@@ -15,18 +15,20 @@ public class GameplayEffectData // Immutable
 
 	public PeriodicData? PeriodicData { get; }
 
-	//public bool SnapshopLevelOnApplication { get; }
+	public bool SnapshopLevel { get; }
 
 	public GameplayEffectData(
 		string name,
 		DurationData durationData,
 		StackingData? stackingData,
-		PeriodicData? periodicData)
+		PeriodicData? periodicData,
+		bool snapshopLevel = true)
 	{
 		Name = name;
 		DurationData = durationData;
 		StackingData = stackingData;
 		PeriodicData = periodicData;
+		SnapshopLevel = snapshopLevel;
 
 		// Should I really throw? Or just ignore (force null) the periodic data?
 		if (periodicData.HasValue && durationData.Type == DurationType.Instant)
@@ -85,11 +87,17 @@ public class GameplayEffectData // Immutable
 			foreach (var modifier in Modifiers)
 			{
 				if (modifier.Magnitude.MagnitudeCalculationType == MagnitudeCalculationType.AttributeBased &&
-					modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot)
+					!modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot)
 				{
 					throw new ArgumentException($"Effects set as {DurationType.Instant} and " +
-						$"{MagnitudeCalculationType.AttributeBased} cannot be set as Snapshot.");
+						$"{MagnitudeCalculationType.AttributeBased} cannot be set as non Snapshot.");
 				}
+			}
+
+			if (!snapshopLevel)
+			{
+				throw new ArgumentException($"Effects set as {DurationType.Instant} cannot be set as non Snapshot " +
+					$"for Level.");
 			}
 		}
 	}

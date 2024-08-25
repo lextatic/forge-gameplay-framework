@@ -27,6 +27,11 @@ internal class ActiveGameplayEffect
 		ExecutionCount = 0;
 		RemainingDuration = GameplayEffectEvaluatedData.Duration;
 
+		if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.SnapshopLevel)
+		{
+			GameplayEffectEvaluatedData.GameplayEffect.OnLevelChanged += GameplayEffect_OnLevelChanged;
+		}
+
 		foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 		{
 			if (!modifier.Snapshot && !reApplication)
@@ -100,6 +105,11 @@ internal class ActiveGameplayEffect
 					modifier.BackingAttribute.OnValueChanged -= Attribute_OnValueChanged;
 				}
 			}
+
+			if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.SnapshopLevel)
+			{
+				GameplayEffectEvaluatedData.GameplayEffect.OnLevelChanged -= GameplayEffect_OnLevelChanged;
+			}
 		}
 	}
 
@@ -107,12 +117,14 @@ internal class ActiveGameplayEffect
 	{
 		_internalTime += deltaTime;
 
-		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue && _internalTime >= NextPeriodicTick)
+		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
-			GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
-			ExecutionCount++;
-
-			NextPeriodicTick += GameplayEffectEvaluatedData.Period;
+			while (_internalTime >= NextPeriodicTick)
+			{
+				GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
+				ExecutionCount++;
+				NextPeriodicTick += GameplayEffectEvaluatedData.Period;
+			}
 		}
 
 		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration)
@@ -141,6 +153,12 @@ internal class ActiveGameplayEffect
 	private void Attribute_OnValueChanged(Attribute.Attribute _, int __)
 	{
 		// This could be optimized by re-evaluating only the modifiers with the attribute that changed
+		ReEvaluateAndReApply();
+	}
+
+	private void GameplayEffect_OnLevelChanged(int obj)
+	{
+		// This one has to re-calculate everything that uses ScalableFloats
 		ReEvaluateAndReApply();
 	}
 }
