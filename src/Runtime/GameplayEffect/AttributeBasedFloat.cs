@@ -1,4 +1,5 @@
 using GameplayTags.Runtime.Attribute;
+using System;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 
@@ -16,16 +17,17 @@ public enum AttributeBasedFloatCalculationType : byte
 	AttributeMagnitudeEvaluatedUpToChannel,
 }
 
+// Do I really need this struct since it's not used anywhere else other than AttributeBasedFloat?
 public struct AttributeCaptureDefinition
 {
 	public TagName Attribute;
 
 	public AttributeCaptureSource Source;
 
-	public bool Snapshot; // always snapshop?
+	public bool Snapshot; // Only Infinite and HasDuration effects can snapshot
 }
 
-public struct AttributeBasedFloat
+public class AttributeBasedFloat
 {
 	public AttributeCaptureDefinition BackingAttribute;
 
@@ -86,18 +88,5 @@ public struct AttributeBasedFloat
 
 		return (Coeficient.GetValue(effect.Level) * (PreMultiplyAdditiveValue.GetValue(effect.Level) + magnitude))
 			+ PostMultiplyAdditiveValue.GetValue(effect.Level);
-	}
-
-	private Attribute.Attribute? GetAttribute(List<AttributeSet> attributeSets)
-	{
-		foreach (var attributeSet in attributeSets)
-		{
-			if (attributeSet.AttributesMap.ContainsKey(BackingAttribute.Attribute))
-			{
-				return attributeSet.AttributesMap[BackingAttribute.Attribute];
-			}
-		}
-
-		return null;
 	}
 }

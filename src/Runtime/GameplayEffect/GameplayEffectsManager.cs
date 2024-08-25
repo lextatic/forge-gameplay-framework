@@ -15,7 +15,7 @@ public class GameplayEffectsManager
 
 	public void ApplyEffect(GameplayEffect gameplayEffect)
 	{
-		var effectEvaluatedData = EvaluateModifiers(gameplayEffect, _owner);
+		var effectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, _owner);
 
 		if (gameplayEffect.EffectData.DurationData.Type != DurationType.Instant)
 		{
@@ -59,35 +59,5 @@ public class GameplayEffectsManager
 		}
 
 		_activeEffects.RemoveAll(e => e.IsExpired);
-	}
-
-	private GameplayEffectEvaluatedData EvaluateModifiers(GameplayEffect gameplayEffect, GameplaySystem target)
-	{
-		var modifiersEvaluatedData = new List<ModifierEvaluatedData>();
-
-		foreach (var modifier in gameplayEffect.EffectData.Modifiers)
-		{
-			modifiersEvaluatedData.Add(new ModifierEvaluatedData
-			{
-				Attribute = target.Attributes[modifier.Attribute],
-				ModifierOperation = modifier.Operation,
-				Magnitude = modifier.Magnitude.GetMagnitude(gameplayEffect, target),
-				Channel = modifier.Channel,
-			});
-		}
-
-		return new GameplayEffectEvaluatedData()
-		{
-			GameplayEffect = gameplayEffect,
-			ModifiersEvaluatedData = modifiersEvaluatedData,
-			Level = gameplayEffect.Level,
-			Stack = gameplayEffect.EffectData.StackingData.HasValue ?
-				gameplayEffect.EffectData.StackingData.Value.StackLimit.GetValue(gameplayEffect.Level) : 0,
-			Duration = gameplayEffect.EffectData.DurationData.Duration.HasValue ?
-				gameplayEffect.EffectData.DurationData.Duration.Value.GetValue(gameplayEffect.Level) : 0,
-			Period = gameplayEffect.EffectData.PeriodicData.HasValue ?
-				gameplayEffect.EffectData.PeriodicData.Value.Period.GetValue(gameplayEffect.Level) : 0,
-			Target = target,
-		};
 	}
 }

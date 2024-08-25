@@ -6,7 +6,8 @@ public struct ModifierEvaluatedData
 	public ModifierOperation ModifierOperation;
 	public float Magnitude;
 	public int Channel;
-	public bool IsValid; // remove if not used
+	public bool Snapshot;
+	//public bool IsValid; // remove if not used
 }
 
 public struct GameplayEffectEvaluatedData
@@ -18,4 +19,34 @@ public struct GameplayEffectEvaluatedData
 	public float Duration;
 	public float Period;
 	public GameplaySystem Target;
+
+	public GameplayEffectEvaluatedData(GameplayEffect gameplayEffect, GameplaySystem target)
+	{
+		var modifiersEvaluatedData = new List<ModifierEvaluatedData>();
+
+		foreach (var modifier in gameplayEffect.EffectData.Modifiers)
+		{
+			modifiersEvaluatedData.Add(new ModifierEvaluatedData
+			{
+				Attribute = target.Attributes[modifier.Attribute],
+				ModifierOperation = modifier.Operation,
+				Magnitude = modifier.Magnitude.GetMagnitude(gameplayEffect, target),
+				Channel = modifier.Channel,
+				Snapshot = gameplayEffect.EffectData.DurationData.Type == DurationType.Instant ||
+					modifier.Magnitude.MagnitudeCalculationType != MagnitudeCalculationType.AttributeBased ||
+					modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot,
+			});
+		}
+
+		GameplayEffect = gameplayEffect;
+		ModifiersEvaluatedData = modifiersEvaluatedData;
+		Level = gameplayEffect.Level;
+		Stack = gameplayEffect.EffectData.StackingData.HasValue ?
+			gameplayEffect.EffectData.StackingData.Value.StackLimit.GetValue(gameplayEffect.Level) : 0;
+		Duration = gameplayEffect.EffectData.DurationData.Duration != null ?
+			gameplayEffect.EffectData.DurationData.Duration.GetValue(gameplayEffect.Level) : 0;
+		Period = gameplayEffect.EffectData.PeriodicData.HasValue ?
+			gameplayEffect.EffectData.PeriodicData.Value.Period.GetValue(gameplayEffect.Level) : 0;
+		Target = target;
+	}
 }

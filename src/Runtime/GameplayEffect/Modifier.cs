@@ -23,10 +23,10 @@ public class ModifierMagnitude
 		switch (MagnitudeCalculationType)
 		{
 			case MagnitudeCalculationType.ScalableFloat:
-				return ScalableFloatMagnitude.Value.GetValue(effect.Level);
+				return ScalableFloatMagnitude.GetValue(effect.Level);
 
 			case MagnitudeCalculationType.AttributeBased:
-				return AttributeBasedFloat.Value.CalculateMagnitude(effect, target);
+				return AttributeBasedFloat.CalculateMagnitude(effect, target);
 		}
 
 		return 0;

@@ -1,10 +1,10 @@
-﻿namespace GameplayTags.Runtime.GameplayEffect;
+namespace GameplayTags.Runtime.GameplayEffect;
 
 internal class ActiveGameplayEffect
 {
 	private float _internalTime;
 
-	internal GameplayEffectEvaluatedData GameplayEffectEvaluatedData { get; }
+	internal GameplayEffectEvaluatedData GameplayEffectEvaluatedData { get; private set; }
 
 	internal float RemainingDuration { get; private set; }
 
@@ -26,6 +26,14 @@ internal class ActiveGameplayEffect
 		_internalTime = 0;
 		ExecutionCount = 0;
 		RemainingDuration = GameplayEffectEvaluatedData.Duration;
+
+		foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
+		{
+			if (!modifier.Snapshot)
+			{
+				modifier.Attribute.OnValueChanged += Attribute_OnValueChanged;
+			}
+		}
 
 		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
 		{
@@ -104,5 +112,23 @@ internal class ActiveGameplayEffect
 		{
 			Unapply();
 		}
+	}
+
+	private void ReEvaluateAndReApply()
+	{
+		Unapply();
+
+		GameplayEffectEvaluatedData =
+			new GameplayEffectEvaluatedData(
+				GameplayEffectEvaluatedData.GameplayEffect,
+				GameplayEffectEvaluatedData.Target);
+
+		Apply();
+	}
+
+	private void Attribute_OnValueChanged(Attribute.Attribute _, int __)
+	{
+		// This could be optimized by re-evaluating only the modifiers with the attribute that changed
+		ReEvaluateAndReApply();
 	}
 }

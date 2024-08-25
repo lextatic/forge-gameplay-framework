@@ -15,6 +15,8 @@ public class GameplayEffectData // Immutable
 
 	public PeriodicData? PeriodicData { get; }
 
+	//public bool SnapshopLevelOnApplication { get; }
+
 	public GameplayEffectData(
 		string name,
 		DurationData durationData,
@@ -33,7 +35,7 @@ public class GameplayEffectData // Immutable
 		}
 
 		// Should I really throw? Or just ignore (force null) the periodic data?
-		if (durationData.Type != DurationType.HasDuration && durationData.Duration.HasValue)
+		if (durationData.Type != DurationType.HasDuration && durationData.Duration != null)
 		{
 			throw new Exception($"Can't set duration if {nameof(DurationType)} is set to {durationData.Type}.");
 		}
@@ -75,6 +77,19 @@ public class GameplayEffectData // Immutable
 			{
 				throw new Exception($"Effects set as {DurationType.HasDuration} must define " +
 					$" {nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");
+			}
+		}
+
+		if (durationData.Type == DurationType.Instant)
+		{
+			foreach (var modifier in Modifiers)
+			{
+				if (modifier.Magnitude.MagnitudeCalculationType == MagnitudeCalculationType.AttributeBased &&
+					modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot)
+				{
+					throw new ArgumentException($"Effects set as {DurationType.Instant} and " +
+						$"{MagnitudeCalculationType.AttributeBased} cannot be set as Snapshot.");
+				}
 			}
 		}
 	}

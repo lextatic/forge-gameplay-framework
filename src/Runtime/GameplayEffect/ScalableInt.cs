@@ -1,6 +1,6 @@
 namespace GameplayTags.Runtime.GameplayEffect;
 
-public struct ScalableInt
+public class ScalableInt
 {
 	public int BaseValue { get; set; }
 
