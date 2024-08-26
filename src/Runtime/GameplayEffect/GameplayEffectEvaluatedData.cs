@@ -8,7 +8,6 @@ public struct ModifierEvaluatedData
 	public int Channel;
 	public Attribute.Attribute? BackingAttribute;
 	public bool Snapshot;
-	//public bool IsValid; // remove if not used
 }
 
 public struct GameplayEffectEvaluatedData

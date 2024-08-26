@@ -1107,7 +1107,8 @@ public class GameplayEffectsTests
 	[TestMethod]
 	public void Effect_should_stack_values()
 	{
-		var instigator = new Entity();
+		var instigator1 = new Entity();
+		var instigator2 = new Entity();
 		var target = new Entity();
 
 		var effectData = new GameplayEffectData(
@@ -1142,7 +1143,7 @@ public class GameplayEffectsTests
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
 		{
 			EffectCauser = new Entity(),
-			Instigator = instigator,
+			Instigator = instigator1,
 		});
 
 		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
@@ -1151,6 +1152,14 @@ public class GameplayEffectsTests
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(10, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		var effect2 = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator2,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
 	}
 
 	private class TestAttributeSet : AttributeSet

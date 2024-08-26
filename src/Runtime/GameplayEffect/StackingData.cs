@@ -51,7 +51,7 @@ public struct StackingData
 	public StackPolicy StackPolicy; // All stackable effects
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
 	public StackMagnitudePolicy StackMagnitudePolicy; // All stackable effects
-	public StackExpirationPolicy StackExpirationPolicy; // Aff stackable effects, infinite effects removal will count as expiration
+	public StackExpirationPolicy StackExpirationPolicy; // All stackable effects, infinite effects removal will count as expiration
 	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
 	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking == AggregateLevels
 	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects

@@ -19,6 +19,24 @@ public class GameplayEffectsManager
 
 		if (gameplayEffect.EffectData.DurationData.Type != DurationType.Instant)
 		{
+			if (gameplayEffect.EffectData.StackingData.HasValue)
+			{
+				ActiveGameplayEffect? stackableEffect = null;
+
+				stackableEffect = _activeEffects.Find(x => x.GameplayEffectEvaluatedData.GameplayEffect.EffectData == gameplayEffect.EffectData &&
+					(gameplayEffect.EffectData.StackingData.Value.StackPolicy == StackPolicy.AggregateByTarget ||
+					x.GameplayEffectEvaluatedData.GameplayEffect.Context.Instigator == gameplayEffect.Context.Instigator));
+
+				if (stackableEffect is not null)
+				{
+					var stackSucceeded = stackableEffect.AddStack();
+
+					Console.WriteLine($"Stack succeeded: {stackSucceeded}");
+
+					return;
+				}
+			}
+
 			var activeEffect = new ActiveGameplayEffect(effectEvaluatedData);
 			_activeEffects.Add(activeEffect);
 			activeEffect.Apply();

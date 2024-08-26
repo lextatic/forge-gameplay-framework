@@ -1,3 +1,4 @@
+
 namespace GameplayTags.Runtime.GameplayEffect;
 
 internal class ActiveGameplayEffect
@@ -111,6 +112,12 @@ internal class ActiveGameplayEffect
 				GameplayEffectEvaluatedData.GameplayEffect.OnLevelChanged -= GameplayEffect_OnLevelChanged;
 			}
 		}
+	}
+
+	internal bool AddStack()
+	{
+		Console.WriteLine("Add stack");
+		return true;
 	}
 
 	internal void Update(float deltaTime)
