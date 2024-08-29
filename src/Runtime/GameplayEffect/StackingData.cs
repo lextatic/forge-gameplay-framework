@@ -1,22 +1,35 @@
 namespace GameplayTags.Runtime.GameplayEffect;
 
-public enum StackPolicy : byte
+public enum StackPolicy : byte // done
 {
 	AggregateBySource,
 	AggregateByTarget,
 }
 
-public enum StackLevelPolicy : byte
+public enum StackLevelPolicy : byte // done, not tested
 {
 	AggregateLevels,
 	SegregateLevels,
 }
 
-public enum StackMagnitudePolicy : byte
+public enum StackMagnitudePolicy : byte // done
 {
 	DontStack,
 	Sum,
-	Multiply,
+}
+
+// What happens when stack limit is reached and a new application happens?
+public enum StackOverflowPolicy : byte
+{
+	Override,
+	DontApply,
+}
+
+// AggregateByTarget
+public enum StackInstigatorOverridePolicy : byte
+{
+	KeepCurrent,
+	Override,
 }
 
 public enum StackLevelOverridePolicy : byte
@@ -31,6 +44,7 @@ public enum StackApplicationRefreshPolicy : byte
 {
 	RefreshOnSuccessfulApplication,
 	NeverRefresh,
+	//AddTime,
 }
 
 public enum StackExpirationPolicy : byte
@@ -52,7 +66,9 @@ public struct StackingData
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
 	public StackMagnitudePolicy StackMagnitudePolicy; // All stackable effects
 	public StackExpirationPolicy StackExpirationPolicy; // All stackable effects, infinite effects removal will count as expiration
-	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration
-	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with LevelStacking == AggregateLevels
+	public StackOverflowPolicy StackOverflowPolicy; // All stackable effects
+	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration (non infinite)
+	public StackInstigatorOverridePolicy? StackInstigatorOverridePolicy; // Effects with StackPolicy == AggregateByTarget
+	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with StackLevelPolicy == AggregateLevels
 	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
 }

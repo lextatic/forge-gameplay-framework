@@ -1105,7 +1105,7 @@ public class GameplayEffectsTests
 	}
 
 	[TestMethod]
-	public void Effect_should_stack_values()
+	public void Effect_with_magnitude_policy_Sum_should_stack_values()
 	{
 		var instigator1 = new Entity();
 		var instigator2 = new Entity();
@@ -1122,6 +1122,7 @@ public class GameplayEffectsTests
 				StackLimit = new ScalableInt(5),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
+				StackMagnitudePolicy = StackMagnitudePolicy.Sum,
 				StackExpirationPolicy = StackExpirationPolicy.ClearEntireStack,
 				StackApplicationRefreshPolicy = null,
 				StackLevelOverridePolicy = null,
@@ -1160,6 +1161,90 @@ public class GameplayEffectsTests
 		});
 
 		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+
+		// How do I check how many stacks a effect has?
+		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(20, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+
+		Assert.AreEqual(1, stackDataList.Count);
+		Assert.AreEqual(2, stackDataList[0].StackCount);
+		Assert.AreEqual(1, stackDataList[0].EffectLevel);
+		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
+	}
+
+	[TestMethod]
+	public void Effect_with_magnitude_policy_DontStack_should_not_stack_values()
+	{
+		var instigator1 = new Entity();
+		var instigator2 = new Entity();
+		var target = new Entity();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.Infinite,
+			},
+			new StackingData
+			{
+				StackLimit = new ScalableInt(5),
+				StackPolicy = StackPolicy.AggregateByTarget,
+				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
+				StackMagnitudePolicy = StackMagnitudePolicy.DontStack,
+				StackExpirationPolicy = StackExpirationPolicy.ClearEntireStack,
+				StackApplicationRefreshPolicy = null,
+				StackLevelOverridePolicy = null,
+				StackApplicationResetPeriodPolicy = null,
+			},
+			null);
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("TestAttributeSet.Attribute1"),
+			Operation = ModifierOperation.Flat,
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(10),
+			},
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator1,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+
+		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		var effect2 = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = new Entity(),
+			Instigator = instigator2,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+
+		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(10, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+
+		Assert.AreEqual(1, stackDataList.Count);
+		Assert.AreEqual(2,  stackDataList[0].StackCount);
+		Assert.AreEqual(1, stackDataList[0].EffectLevel);
+		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 	}
 
 	private class TestAttributeSet : AttributeSet

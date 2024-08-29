@@ -1,9 +1,13 @@
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace GameplayTags.Runtime.GameplayEffect;
 
 internal class ActiveGameplayEffect
 {
 	private float _internalTime;
+
+	private int _stackCount;
 
 	internal GameplayEffectEvaluatedData GameplayEffectEvaluatedData { get; private set; }
 
@@ -13,13 +17,18 @@ internal class ActiveGameplayEffect
 
 	internal float ExecutionCount { get; private set; }
 
-	internal bool IsExpired => GameplayEffectEvaluatedData.GameplayEffect.EffectData.DurationData.Type ==
+	internal bool IsExpired => EffectData.DurationData.Type ==
 		DurationType.HasDuration &&
 		RemainingDuration <= 0;
+
+	private GameplayEffectData EffectData => GameplayEffectEvaluatedData.GameplayEffect.EffectData;
+
+	private GameplayEffect GameplayEffect => GameplayEffectEvaluatedData.GameplayEffect;
 
 	internal ActiveGameplayEffect(GameplayEffectEvaluatedData evaluatedEffectData)
 	{
 		GameplayEffectEvaluatedData = evaluatedEffectData;
+		_stackCount = 1;
 	}
 
 	internal void Apply(bool reApplication = false)
@@ -28,25 +37,29 @@ internal class ActiveGameplayEffect
 		ExecutionCount = 0;
 		RemainingDuration = GameplayEffectEvaluatedData.Duration;
 
-		if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.SnapshopLevel)
+		if (!EffectData.SnapshopLevel)
 		{
-			GameplayEffectEvaluatedData.GameplayEffect.OnLevelChanged += GameplayEffect_OnLevelChanged;
+			GameplayEffect.OnLevelChanged += GameplayEffect_OnLevelChanged;
 		}
 
 		foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 		{
 			if (!modifier.Snapshot && !reApplication)
 			{
+				System.Diagnostics.Debug.Assert(
+						modifier.BackingAttribute is not null,
+						"All non-snapshots modifiers should have a BackingAttribute set.");
+
 				modifier.BackingAttribute.OnValueChanged += Attribute_OnValueChanged;
 			}
 		}
 
-		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
+		if (EffectData.PeriodicData.HasValue)
 		{
-			if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.Value.ExecuteOnApplication &&
+			if (EffectData.PeriodicData.Value.ExecuteOnApplication &&
 				!reApplication)
 			{
-				GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
+				GameplayEffect.Execute(GameplayEffectEvaluatedData);
 				ExecutionCount++;
 			}
 
@@ -76,7 +89,7 @@ internal class ActiveGameplayEffect
 
 	internal void Unapply(bool reApplication = false)
 	{
-		if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
+		if (!EffectData.PeriodicData.HasValue)
 		{
 			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 			{
@@ -103,38 +116,65 @@ internal class ActiveGameplayEffect
 			{
 				if (!modifier.Snapshot)
 				{
+					System.Diagnostics.Debug.Assert(
+						modifier.BackingAttribute is not null,
+						"All non-snapshots modifiers should have a BackingAttribute set.");
+
 					modifier.BackingAttribute.OnValueChanged -= Attribute_OnValueChanged;
 				}
 			}
 
-			if (!GameplayEffectEvaluatedData.GameplayEffect.EffectData.SnapshopLevel)
+			if (!EffectData.SnapshopLevel)
 			{
-				GameplayEffectEvaluatedData.GameplayEffect.OnLevelChanged -= GameplayEffect_OnLevelChanged;
+				GameplayEffect.OnLevelChanged -= GameplayEffect_OnLevelChanged;
 			}
 		}
 	}
 
 	internal bool AddStack()
 	{
-		Console.WriteLine("Add stack");
+		System.Diagnostics.Debug.Assert(
+			EffectData.StackingData.HasValue,
+			"StackingData should never be null at this point.");
+
+		if (_stackCount == EffectData.StackingData.Value.StackLimit.GetValue(
+				GameplayEffectEvaluatedData.Level))
+		{
+			return false;
+		}
+
+		_stackCount++;
+		ReEvaluateAndReApply();
 		return true;
+	}
+
+	internal void RemoveStack()
+	{
+		if (_stackCount == 1)
+		{
+			Unapply();
+			return;
+		}
+
+		_stackCount--;
+		ReEvaluateAndReApply();
 	}
 
 	internal void Update(float deltaTime)
 	{
 		_internalTime += deltaTime;
 
-		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.PeriodicData.HasValue)
+		if (EffectData.PeriodicData.HasValue)
 		{
 			while (_internalTime >= NextPeriodicTick)
 			{
-				GameplayEffectEvaluatedData.GameplayEffect.Execute(GameplayEffectEvaluatedData);
+				GameplayEffect.Execute(GameplayEffectEvaluatedData);
 				ExecutionCount++;
 				NextPeriodicTick += GameplayEffectEvaluatedData.Period;
 			}
 		}
 
-		if (GameplayEffectEvaluatedData.GameplayEffect.EffectData.DurationData.Type == DurationType.HasDuration)
+		if (EffectData.DurationData.Type == DurationType.HasDuration)
 		{
 			RemainingDuration -= deltaTime;
 		}
@@ -152,7 +192,8 @@ internal class ActiveGameplayEffect
 		GameplayEffectEvaluatedData =
 			new GameplayEffectEvaluatedData(
 				GameplayEffectEvaluatedData.GameplayEffect,
-				GameplayEffectEvaluatedData.Target);
+				GameplayEffectEvaluatedData.Target,
+				_stackCount);
 
 		Apply(true);
 	}

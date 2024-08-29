@@ -1,3 +1,5 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace GameplayTags.Runtime.GameplayEffect;
 
 public struct ModifierEvaluatedData
@@ -20,9 +22,16 @@ public struct GameplayEffectEvaluatedData
 	public float Period;
 	public GameplaySystem Target;
 
-	public GameplayEffectEvaluatedData(GameplayEffect gameplayEffect, GameplaySystem target)
+	public GameplayEffectEvaluatedData(GameplayEffect gameplayEffect, GameplaySystem target, int stack = 1)
 	{
 		var modifiersEvaluatedData = new List<ModifierEvaluatedData>();
+
+		float stackMultiplier = stack;
+		if (gameplayEffect.EffectData.StackingData.HasValue &&
+			gameplayEffect.EffectData.StackingData.Value.StackMagnitudePolicy == StackMagnitudePolicy.DontStack)
+		{
+			stackMultiplier = 1;
+		}
 
 		foreach (var modifier in gameplayEffect.EffectData.Modifiers)
 		{
@@ -31,7 +40,7 @@ public struct GameplayEffectEvaluatedData
 			{
 				Attribute = target.Attributes[modifier.Attribute],
 				ModifierOperation = modifier.Operation,
-				Magnitude = modifier.Magnitude.GetMagnitude(gameplayEffect, target),
+				Magnitude = modifier.Magnitude.GetMagnitude(gameplayEffect, target) * stackMultiplier,
 				Channel = modifier.Channel,
 				Snapshot = gameplayEffect.EffectData.DurationData.Type == DurationType.Instant ||
 					modifier.Magnitude.MagnitudeCalculationType != MagnitudeCalculationType.AttributeBased ||
@@ -48,9 +57,8 @@ public struct GameplayEffectEvaluatedData
 		GameplayEffect = gameplayEffect;
 		ModifiersEvaluatedData = modifiersEvaluatedData;
 		Level = gameplayEffect.Level;
-		Stack = gameplayEffect.EffectData.StackingData.HasValue ?
-			gameplayEffect.EffectData.StackingData.Value.StackLimit.GetValue(gameplayEffect.Level) : 0;
-		Duration = gameplayEffect.EffectData.DurationData.Duration != null ?
+		Stack = stack;
+		Duration = gameplayEffect.EffectData.DurationData.Duration is not null ?
 			gameplayEffect.EffectData.DurationData.Duration.GetValue(gameplayEffect.Level) : 0;
 		Period = gameplayEffect.EffectData.PeriodicData.HasValue ?
 			gameplayEffect.EffectData.PeriodicData.Value.Period.GetValue(gameplayEffect.Level) : 0;
