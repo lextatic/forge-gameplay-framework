@@ -15,7 +15,7 @@ public class GameplayEffectsManager
 
 	public void ApplyEffect(GameplayEffect gameplayEffect)
 	{
-		var effectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, _owner);
+		//var effectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, _owner);
 
 		if (gameplayEffect.EffectData.DurationData.Type != DurationType.Instant)
 		{
@@ -32,7 +32,7 @@ public class GameplayEffectsManager
 
 				if (stackableEffect is not null)
 				{
-					var stackSucceeded = stackableEffect.AddStack();
+					var stackSucceeded = stackableEffect.AddStack(gameplayEffect);
 
 					Console.WriteLine($"Stack application status: {stackSucceeded}");
 
@@ -40,14 +40,14 @@ public class GameplayEffectsManager
 				}
 			}
 
-			var activeEffect = new ActiveGameplayEffect(effectEvaluatedData);
+			var activeEffect = new ActiveGameplayEffect(gameplayEffect, _owner);
 			_activeEffects.Add(activeEffect);
 			activeEffect.Apply();
 		}
 		else
 		{
 			// This path is called "Execute" and should work for instant effects
-			gameplayEffect.Execute(effectEvaluatedData);
+			gameplayEffect.Execute(gameplayEffect, _owner);
 		}
 	}
 

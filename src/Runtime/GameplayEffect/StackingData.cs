@@ -19,20 +19,21 @@ public enum StackMagnitudePolicy : byte // done
 }
 
 // What happens when stack limit is reached and a new application happens?
-public enum StackOverflowPolicy : byte
+public enum StackOverflowPolicy : byte // done, not tested
 {
-	Override,
+	ApplyAnyway,
 	DontApply,
 }
 
 // AggregateByTarget
-public enum StackInstigatorOverridePolicy : byte
+public enum StackInstigatorOverridePolicy : byte // done, not tested
 {
 	KeepCurrent,
 	Override,
 }
 
-public enum StackLevelOverridePolicy : byte
+// AggregateLevels
+public enum StackLevelOverridePolicy : byte // done, not tested
 {
 	AlwaysKeep,
 	AlwaysOverride,
@@ -40,20 +41,19 @@ public enum StackLevelOverridePolicy : byte
 	KeepLowest,
 }
 
-public enum StackApplicationRefreshPolicy : byte
-{
-	RefreshOnSuccessfulApplication,
-	NeverRefresh,
-	//AddTime,
-}
-
-public enum StackExpirationPolicy : byte
+public enum StackExpirationPolicy : byte // done, not tested
 {
 	ClearEntireStack,
 	RemoveSingleStackAndRefreshDuration,
 }
 
-public enum StackApplicationResetPeriodPolicy : byte
+public enum StackApplicationRefreshPolicy : byte // done, not tested
+{
+	RefreshOnSuccessfulApplication,
+	NeverRefresh,
+}
+
+public enum StackApplicationResetPeriodPolicy : byte // done, not tested
 {
 	ResetOnSuccessfulApplication,
 	NeverReset,

@@ -1,9 +1,24 @@
 namespace GameplayTags.Runtime.GameplayEffect;
 
-public struct GameplayEffectContext
+public struct GameplayEffectContext : IEquatable<GameplayEffectContext>
 {
 	public IGameplaySystem Instigator; // Entity responsible for causing the action or event (eg. Character, NPC, Environment)
 	public IGameplaySystem EffectCauser; // The actual entity that caused the effect (eg. Weapon, Projectile, Trap)
+
+	public bool Equals(GameplayEffectContext other)
+	{
+		return Instigator == other.Instigator && EffectCauser == other.EffectCauser;
+	}
+
+	public static bool operator ==(GameplayEffectContext lhs, GameplayEffectContext rhs)
+	{
+		return lhs.Equals(rhs);
+	}
+
+	public static bool operator !=(GameplayEffectContext lhs, GameplayEffectContext rhs)
+	{
+		return !lhs.Equals(rhs);
+	}
 }
 
 public class GameplayEffect
@@ -43,9 +58,14 @@ public class GameplayEffect
 		Level++;
 	}
 
+	internal void Execute(GameplayEffect gameplayEffect, GameplaySystem target)
+	{
+		Execute(new GameplayEffectEvaluatedData(gameplayEffect, target));
+	}
+
 	internal void Execute(GameplayEffectEvaluatedData effectEvaluatedData)
 	{
-		foreach(var modifier in effectEvaluatedData.ModifiersEvaluatedData)
+		foreach (var modifier in effectEvaluatedData.ModifiersEvaluatedData)
 		{
 			switch (modifier.ModifierOperation)
 			{

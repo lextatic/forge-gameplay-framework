@@ -1,5 +1,6 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 
@@ -25,9 +26,9 @@ internal class ActiveGameplayEffect
 
 	private GameplayEffect GameplayEffect => GameplayEffectEvaluatedData.GameplayEffect;
 
-	internal ActiveGameplayEffect(GameplayEffectEvaluatedData evaluatedEffectData)
+	internal ActiveGameplayEffect(GameplayEffect gameplayEffect, GameplaySystem target)
 	{
-		GameplayEffectEvaluatedData = evaluatedEffectData;
+		GameplayEffectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, target);
 		_stackCount = 1;
 	}
 
@@ -131,20 +132,83 @@ internal class ActiveGameplayEffect
 		}
 	}
 
-	internal bool AddStack()
+	internal bool AddStack(GameplayEffect gameplayEffect)
 	{
-		System.Diagnostics.Debug.Assert(
+		Debug.Assert(
 			EffectData.StackingData.HasValue,
 			"StackingData should never be null at this point.");
 
-		if (_stackCount == EffectData.StackingData.Value.StackLimit.GetValue(
+		var stackingData = EffectData.StackingData.Value;
+		var hasChanges = false;
+
+		if (_stackCount == stackingData.StackLimit.GetValue(
 				GameplayEffectEvaluatedData.Level))
 		{
-			return false;
+			if (stackingData.StackOverflowPolicy == StackOverflowPolicy.DontApply)
+			{
+				return false;
+			}
+		}
+		// It can be a successfull application and still not increase stack count.
+		// In some cases we can even skip re-application.
+		else
+		{
+			_stackCount++;
+			hasChanges = true;
 		}
 
-		_stackCount++;
-		ReEvaluateAndReApply();
+		if (stackingData.StackApplicationRefreshPolicy == StackApplicationRefreshPolicy.RefreshOnSuccessfulApplication)
+		{
+			RemainingDuration = GameplayEffectEvaluatedData.Duration;
+		}
+
+		if (stackingData.StackApplicationResetPeriodPolicy == StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication)
+		{
+			NextPeriodicTick = GameplayEffectEvaluatedData.Period;
+		}
+
+		var context = GameplayEffectEvaluatedData.Context;
+
+		if (stackingData.StackPolicy == StackPolicy.AggregateByTarget &&
+			stackingData.StackInstigatorOverridePolicy == StackInstigatorOverridePolicy.Override &&
+			context != gameplayEffect.Context)
+		{
+			context = gameplayEffect.Context;
+			hasChanges = true;
+		}
+
+		var level = GameplayEffectEvaluatedData.Level;
+
+		if (stackingData.StackLevelPolicy == StackLevelPolicy.AggregateLevels &&
+			level != gameplayEffect.Level)
+		{
+			switch (stackingData.StackLevelOverridePolicy)
+			{
+				case StackLevelOverridePolicy.AlwaysOverride:
+					level = gameplayEffect.Level;
+					break;
+
+				case StackLevelOverridePolicy.AlwaysKeep:
+					break;
+
+				case StackLevelOverridePolicy.KeepLowest:
+					level = Math.Min(level, gameplayEffect.Level);
+					break;
+
+				case StackLevelOverridePolicy.KeepHighest:
+					level = Math.Max(level, gameplayEffect.Level);
+					break;
+			}
+
+			hasChanges |= stackingData.StackLevelOverridePolicy != StackLevelOverridePolicy.AlwaysKeep;
+		}
+
+		if (!hasChanges)
+		{
+			return true;
+		}
+
+		ReEvaluateAndReApply(context, level);
 		return true;
 	}
 
@@ -160,6 +224,9 @@ internal class ActiveGameplayEffect
 		ReEvaluateAndReApply();
 	}
 
+	// This update doesn't work right for stackable+periodic effect if you use a high deltaTime.
+	// This is because it's going to evaluate all the periodic applications and only then remove
+	// all the stacks which would have a different value than if applied in the correct order.
 	internal void Update(float deltaTime)
 	{
 		_internalTime += deltaTime;
@@ -181,11 +248,24 @@ internal class ActiveGameplayEffect
 
 		if (IsExpired)
 		{
+			if (EffectData.StackingData.HasValue &&
+				EffectData.StackingData.Value.StackExpirationPolicy ==
+				StackExpirationPolicy.RemoveSingleStackAndRefreshDuration)
+			{
+				while (_stackCount >= 1 && RemainingDuration <= 0)
+				{
+					RemoveStack();
+					RemainingDuration += GameplayEffectEvaluatedData.Duration;
+				}
+
+				return;
+			}
+
 			Unapply();
 		}
 	}
 
-	private void ReEvaluateAndReApply()
+	private void ReEvaluateAndReApply(GameplayEffectContext? context = null, int? level = null)
 	{
 		Unapply(true);
 
@@ -193,7 +273,9 @@ internal class ActiveGameplayEffect
 			new GameplayEffectEvaluatedData(
 				GameplayEffectEvaluatedData.GameplayEffect,
 				GameplayEffectEvaluatedData.Target,
-				_stackCount);
+				_stackCount,
+				context,
+				level);
 
 		Apply(true);
 	}

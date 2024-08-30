@@ -2,6 +2,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 
+// TODO: Change to struct
 public class GameplayEffectData // Immutable
 {
 	public List<Modifier> Modifiers { get; } = new ();

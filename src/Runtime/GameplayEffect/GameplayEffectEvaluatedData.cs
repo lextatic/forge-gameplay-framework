@@ -16,13 +16,18 @@ public struct GameplayEffectEvaluatedData
 {
 	public GameplayEffect GameplayEffect;
 	public List<ModifierEvaluatedData> ModifiersEvaluatedData;
+	public GameplayEffectContext Context;
 	public int Level;
 	public int Stack;
 	public float Duration;
 	public float Period;
 	public GameplaySystem Target;
 
-	public GameplayEffectEvaluatedData(GameplayEffect gameplayEffect, GameplaySystem target, int stack = 1)
+	public GameplayEffectEvaluatedData(GameplayEffect gameplayEffect,
+		GameplaySystem target,
+		int stack = 1,
+		GameplayEffectContext? context = null,
+		int? level = null)
 	{
 		var modifiersEvaluatedData = new List<ModifierEvaluatedData>();
 
@@ -56,7 +61,8 @@ public struct GameplayEffectEvaluatedData
 
 		GameplayEffect = gameplayEffect;
 		ModifiersEvaluatedData = modifiersEvaluatedData;
-		Level = gameplayEffect.Level;
+		Context = context.HasValue ? context.Value : gameplayEffect.Context;
+		Level = level.HasValue ? level.Value : gameplayEffect.Level;
 		Stack = stack;
 		Duration = gameplayEffect.EffectData.DurationData.Duration is not null ?
 			gameplayEffect.EffectData.DurationData.Duration.GetValue(gameplayEffect.Level) : 0;
