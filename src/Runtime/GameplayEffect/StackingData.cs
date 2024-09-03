@@ -22,23 +22,45 @@ public enum StackMagnitudePolicy : byte // done
 public enum StackOverflowPolicy : byte // done, not tested
 {
 	ApplyAnyway,
-	DontApply,
+	DenyApplication,
 }
 
-// AggregateByTarget
+// StackPolicy == AggregateByTarget
+public enum StackInstigatorDenialPolicy : byte
+{
+	AlwaysAllow,
+	DenyIfDifferent,
+}
+
+// StackPolicy == AggregateByTarget
 public enum StackInstigatorOverridePolicy : byte // done, not tested
 {
 	KeepCurrent,
 	Override,
 }
 
-// AggregateLevels
-public enum StackLevelOverridePolicy : byte // done, not tested
+// StackPolicy == AggregateByTarget && StackInstigatorOverridePolicy == Override
+public enum StackInstigatorOverrideStackCountPolicy : byte
 {
-	AlwaysKeep,
-	AlwaysOverride,
-	KeepHighest,
-	KeepLowest,
+	IncreaseStacks,
+	ResetStacks,
+}
+
+// StackLevelPolicy == AggregateLevels
+[Flags]
+public enum LevelComparison : byte
+{
+	None = 0,
+	Equal = 1 << 0,
+	Higher = 1 << 1,
+	Lower = 1 << 2,
+}
+
+// StackLevelPolicy == AggregateLevels && StackLevelOverridePolicy == Any
+public enum StackLevelOverrideStackCountPolicy : byte
+{
+	IncreaseStacks,
+	ResetStacks,
 }
 
 public enum StackExpirationPolicy : byte // done, not tested
@@ -64,11 +86,15 @@ public struct StackingData
 	public ScalableInt StackLimit; // All stackable effects
 	public StackPolicy StackPolicy; // All stackable effects
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
-	public StackMagnitudePolicy StackMagnitudePolicy; // All stackable effects
-	public StackExpirationPolicy StackExpirationPolicy; // All stackable effects, infinite effects removal will count as expiration
-	public StackOverflowPolicy StackOverflowPolicy; // All stackable effects
-	public StackApplicationRefreshPolicy? StackApplicationRefreshPolicy; // Effects with duration (non infinite)
-	public StackInstigatorOverridePolicy? StackInstigatorOverridePolicy; // Effects with StackPolicy == AggregateByTarget
-	public StackLevelOverridePolicy? StackLevelOverridePolicy; // Effects with StackLevelPolicy == AggregateLevels
+	public StackMagnitudePolicy MagnitudePolicy; // All stackable effects
+	public StackOverflowPolicy OverflowPolicy; // All stackable effects
+	public StackExpirationPolicy ExpirationPolicy; // All stackable effects, infinite effects removal will count as expiration
+	public StackInstigatorDenialPolicy? InstigatorDenialPolicy; // StackPolicy == AggregateByTarget
+	public StackInstigatorOverridePolicy? InstigatorOverridePolicy; // StackPolicy == AggregateByTarget
+	public StackInstigatorOverrideStackCountPolicy? InstigatorOverrideStackCountPolicy; // StackPolicy == AggregateByTarget && StackInstigatorOverridePolicy == Override
+	public LevelComparison? LevelDenialPolicy; // StackLevelPolicy == AggregateLevels
+	public LevelComparison? LevelOverridePolicy; // StackLevelPolicy == AggregateLevels
+	public StackLevelOverrideStackCountPolicy? LevelOverrideStackCountPolicy; // StackLevelPolicy == AggregateLevels && StackLevelOverridePolicy == Any
+	public StackApplicationRefreshPolicy? ApplicationRefreshPolicy; // Effects with duration (non infinite)
 	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
 }

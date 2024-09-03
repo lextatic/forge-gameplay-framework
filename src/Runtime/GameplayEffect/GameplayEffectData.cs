@@ -62,21 +62,69 @@ public class GameplayEffectData // Immutable
 				throw new Exception($"{DurationType.Instant} effects can't have stacks.");
 			}
 
+			if (stackingData.Value.StackPolicy == StackPolicy.AggregateByTarget !=
+				stackingData.Value.InstigatorDenialPolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackPolicy)} is set {StackPolicy.AggregateByTarget}, " +
+					$"{nameof(StackInstigatorDenialPolicy)} must be defined. And not defined if otherwise.");
+			}
+
+			if (stackingData.Value.StackPolicy == StackPolicy.AggregateByTarget !=
+				stackingData.Value.InstigatorOverridePolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackPolicy)} is set {StackPolicy.AggregateByTarget}, " +
+					$"{nameof(StackInstigatorOverridePolicy)} must be defined. And not defined if otherwise.");
+			}
+
+			if ((stackingData.Value.StackPolicy == StackPolicy.AggregateByTarget &&
+				stackingData.Value.InstigatorOverridePolicy.HasValue &&
+				stackingData.Value.InstigatorOverridePolicy.Value == StackInstigatorOverridePolicy.Override) !=
+				stackingData.Value.InstigatorOverrideStackCountPolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackInstigatorOverridePolicy)} is set {StackInstigatorOverridePolicy.Override}, " +
+					$"{nameof(StackInstigatorOverrideStackCountPolicy)} must be defined. And not defined if otherwise.");
+			}
+
+			if (stackingData.Value.StackLevelPolicy == StackLevelPolicy.AggregateLevels !=
+				stackingData.Value.LevelDenialPolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackLevelPolicy)} is set {StackLevelPolicy.AggregateLevels}, " +
+					$"{nameof(LevelComparison)} must be defined. And not defined if otherwise.");
+			}
+
+			if (stackingData.Value.StackLevelPolicy == StackLevelPolicy.AggregateLevels !=
+				stackingData.Value.LevelOverridePolicy.HasValue)
+			{
+				throw new Exception($"If {nameof(StackLevelPolicy)} is set {StackLevelPolicy.AggregateLevels}, " +
+					$"LevelOverridePolicy must be defined. And not defined if otherwise.");
+			}
+
+			if ((stackingData.Value.StackLevelPolicy == StackLevelPolicy.AggregateLevels &&
+				stackingData.Value.LevelOverridePolicy.HasValue &&
+				stackingData.Value.LevelOverridePolicy.Value != LevelComparison.None) !=
+				stackingData.Value.LevelOverrideStackCountPolicy.HasValue)
+			{
+				throw new Exception($"If LevelOverridePolicy is different from {LevelComparison.None}, " +
+					$"{nameof(StackLevelOverrideStackCountPolicy)} must be defined. And not defined if otherwise.");
+			}
+
+			if (stackingData.Value.LevelDenialPolicy.HasValue &&
+				stackingData.Value.LevelOverridePolicy.HasValue &&
+				stackingData.Value.LevelDenialPolicy.Value != LevelComparison.None &&
+				(stackingData.Value.LevelDenialPolicy.Value & stackingData.Value.LevelOverridePolicy.Value) != 0)
+			{
+				throw new Exception($"LevelDenialPolicy and LevelOverridePolicy should't " +
+					$"have the same value. If it's getting denied, how will it override?");
+			}
+
 			if (stackingData.Value.StackApplicationResetPeriodPolicy.HasValue != PeriodicData.HasValue)
 			{
 				throw new Exception($"Both {nameof(PeriodicData)} and {nameof(StackApplicationResetPeriodPolicy)} " +
 					$"must be either defined or undefined.");
 			}
 
-			if (stackingData.Value.StackLevelPolicy == StackLevelPolicy.AggregateLevels !=
-				stackingData.Value.StackLevelOverridePolicy.HasValue)
-			{
-				throw new Exception($"If {nameof(StackLevelPolicy)} is set {StackLevelPolicy.AggregateLevels}, " +
-					$"{nameof(StackLevelOverridePolicy)} must be defined. And not defined if otherwise.");
-			}
-
 			if (durationData.Type == DurationType.HasDuration !=
-				stackingData.Value.StackApplicationRefreshPolicy.HasValue)
+				stackingData.Value.ApplicationRefreshPolicy.HasValue)
 			{
 				throw new Exception($"Effects set as {DurationType.HasDuration} must define " +
 					$" {nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");

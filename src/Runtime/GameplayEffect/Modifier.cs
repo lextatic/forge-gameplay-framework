@@ -18,15 +18,15 @@ public class ModifierMagnitude
 	// CustomCalculationClass
 	// Setbycaller
 
-	public float GetMagnitude(GameplayEffect effect, GameplaySystem target)
+	public float GetMagnitude(GameplayEffect effect, GameplaySystem target, int? level = null)
 	{
 		switch (MagnitudeCalculationType)
 		{
 			case MagnitudeCalculationType.ScalableFloat:
-				return ScalableFloatMagnitude.GetValue(effect.Level);
+				return ScalableFloatMagnitude.GetValue(level.HasValue ? level.Value : effect.Level);
 
 			case MagnitudeCalculationType.AttributeBased:
-				return AttributeBasedFloat.CalculateMagnitude(effect, target);
+				return AttributeBasedFloat.CalculateMagnitude(effect, target, level);
 		}
 
 		return 0;

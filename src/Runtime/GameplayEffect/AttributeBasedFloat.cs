@@ -50,7 +50,7 @@ public class AttributeBasedFloat
 	 * attribute directly. */
 	public Curve? AttributeCurve;
 
-	public float CalculateMagnitude(GameplayEffect effect, GameplaySystem target)
+	public float CalculateMagnitude(GameplayEffect effect, GameplaySystem target, int? level = null)
 	{
 		Attribute.Attribute? attribute = null;
 
@@ -91,7 +91,9 @@ public class AttributeBasedFloat
 				break;
 		}
 
-		return (Coeficient.GetValue(effect.Level) * (PreMultiplyAdditiveValue.GetValue(effect.Level) + magnitude))
-			+ PostMultiplyAdditiveValue.GetValue(effect.Level);
+		var evaluatedLevel = level.HasValue ? level.Value : effect.Level;
+
+		return (Coeficient.GetValue(evaluatedLevel) * (PreMultiplyAdditiveValue.GetValue(evaluatedLevel) + magnitude))
+			+ PostMultiplyAdditiveValue.GetValue(evaluatedLevel);
 	}
 }
