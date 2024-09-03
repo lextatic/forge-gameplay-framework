@@ -160,11 +160,8 @@ internal class ActiveGameplayEffect
 				return false;
 			}
 
-			Debug.Assert(
-				stackingData.InstigatorOverridePolicy.HasValue,
-				"InstigatorOverridePolicy should never be null at this point.");
-
-			if (stackingData.InstigatorOverridePolicy.Value == StackInstigatorOverridePolicy.Override &&
+			if (stackingData.InstigatorOverridePolicy.HasValue &&
+				stackingData.InstigatorOverridePolicy.Value == StackInstigatorOverridePolicy.Override &&
 				GameplayEffectEvaluatedData.GameplayEffect.Context != gameplayEffect.Context)
 			{
 				evaluatedGameplayEffect = gameplayEffect;

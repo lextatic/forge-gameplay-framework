@@ -69,10 +69,12 @@ public class GameplayEffectData // Immutable
 					$"{nameof(StackInstigatorDenialPolicy)} must be defined. And not defined if otherwise.");
 			}
 
-			if (stackingData.Value.StackPolicy == StackPolicy.AggregateByTarget !=
+			if ((stackingData.Value.StackPolicy == StackPolicy.AggregateByTarget &&
+				stackingData.Value.InstigatorDenialPolicy == StackInstigatorDenialPolicy.AlwaysAllow) !=
 				stackingData.Value.InstigatorOverridePolicy.HasValue)
 			{
-				throw new Exception($"If {nameof(StackPolicy)} is set {StackPolicy.AggregateByTarget}, " +
+				throw new Exception($"If {nameof(StackPolicy)} is set {StackPolicy.AggregateByTarget} and " +
+					$"{nameof(StackInstigatorDenialPolicy)} is set to {StackInstigatorDenialPolicy.AlwaysAllow}, " +
 					$"{nameof(StackInstigatorOverridePolicy)} must be defined. And not defined if otherwise.");
 			}
 
