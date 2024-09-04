@@ -1120,6 +1120,7 @@ public class GameplayEffectsTests
 			new StackingData
 			{
 				StackLimit = new ScalableInt(5),
+				InitialStack = new ScalableInt(1),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
 				MagnitudePolicy = StackMagnitudePolicy.Sum,
@@ -1198,6 +1199,7 @@ public class GameplayEffectsTests
 			new StackingData
 			{
 				StackLimit = new ScalableInt(5),
+				InitialStack = new ScalableInt(1),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
 				MagnitudePolicy = StackMagnitudePolicy.DontStack,
@@ -1275,6 +1277,7 @@ public class GameplayEffectsTests
 			new StackingData
 			{
 				StackLimit = new ScalableInt(5),
+				InitialStack = new ScalableInt(1),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
 				MagnitudePolicy = StackMagnitudePolicy.DontStack,
@@ -1394,6 +1397,7 @@ public class GameplayEffectsTests
 			new StackingData
 			{
 				StackLimit = new ScalableInt(5),
+				InitialStack = new ScalableInt(1),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.AggregateLevels,
 				MagnitudePolicy = StackMagnitudePolicy.Sum,
@@ -1519,6 +1523,7 @@ public class GameplayEffectsTests
 			new StackingData
 			{
 				StackLimit = new ScalableInt(5),
+				InitialStack = new ScalableInt(1),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.AggregateLevels,
 				MagnitudePolicy = StackMagnitudePolicy.Sum,
@@ -1644,6 +1649,7 @@ public class GameplayEffectsTests
 			new StackingData
 			{
 				StackLimit = new ScalableInt(5),
+				InitialStack = new ScalableInt(1),
 				StackPolicy = StackPolicy.AggregateByTarget,
 				StackLevelPolicy = StackLevelPolicy.AggregateLevels,
 				MagnitudePolicy = StackMagnitudePolicy.Sum,

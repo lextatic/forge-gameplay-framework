@@ -29,7 +29,15 @@ internal class ActiveGameplayEffect
 	internal ActiveGameplayEffect(GameplayEffect gameplayEffect, GameplaySystem target)
 	{
 		GameplayEffectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, target);
-		_stackCount = 1;
+
+		if (gameplayEffect.EffectData.StackingData.HasValue)
+		{
+			_stackCount = gameplayEffect.EffectData.StackingData.Value.InitialStack.GetValue(GameplayEffectEvaluatedData.Level);
+		}
+		else
+		{
+			_stackCount = 1;
+		}
 	}
 
 	internal void Apply(bool reApplication = false)
@@ -132,57 +140,23 @@ internal class ActiveGameplayEffect
 		}
 	}
 
-	internal bool AddStack(GameplayEffect gameplayEffect)
+	internal bool AddStack(GameplayEffect gameplayEffect, int stacks = 1)
 	{
 		Debug.Assert(
 			EffectData.StackingData.HasValue,
 			"StackingData should never be null at this point.");
 
-		var stackingData = EffectData.StackingData.Value;
-
-		if (_stackCount == stackingData.StackLimit.GetValue(GameplayEffectEvaluatedData.Level) &&
-			stackingData.OverflowPolicy == StackOverflowPolicy.DenyApplication)
-		{
-			return false;
-		}
+		Debug.Assert(
+			stacks > 0,
+			"Number of stacks should be higher than 1.");
 
 		var hasChanges = false;
 		var resetStacks = false;
 
+		var stackingData = EffectData.StackingData.Value;
 		var evaluatedLevel = GameplayEffectEvaluatedData.Level;
-		var evaluatedGameplayEffect = GameplayEffectEvaluatedData.GameplayEffect;
 
-		if (stackingData.InstigatorDenialPolicy.HasValue)
-		{
-			if (stackingData.InstigatorDenialPolicy.Value == StackInstigatorDenialPolicy.DenyIfDifferent &&
-				GameplayEffectEvaluatedData.GameplayEffect.Context != gameplayEffect.Context)
-			{
-				return false;
-			}
-
-			if (stackingData.InstigatorOverridePolicy.HasValue &&
-				stackingData.InstigatorOverridePolicy.Value == StackInstigatorOverridePolicy.Override &&
-				GameplayEffectEvaluatedData.GameplayEffect.Context != gameplayEffect.Context)
-			{
-				evaluatedGameplayEffect = gameplayEffect;
-				hasChanges = true;
-
-				Debug.Assert(
-				stackingData.InstigatorOverrideStackCountPolicy.HasValue,
-				"InstigatorOverrideStackCountPolicy should never be null at this point.");
-
-				switch (stackingData.InstigatorOverrideStackCountPolicy.Value)
-				{
-					case StackInstigatorOverrideStackCountPolicy.ResetStacks:
-						resetStacks = true;
-						break;
-
-					case StackInstigatorOverrideStackCountPolicy.IncreaseStacks:
-						break;
-				}
-			}
-		}
-
+		// We have to evaluate level before checking the stack count since the level could change.
 		if (stackingData.LevelDenialPolicy.HasValue)
 		{
 			Debug.Assert(
@@ -224,21 +198,64 @@ internal class ActiveGameplayEffect
 			}
 		}
 
+		var stackLimit = stackingData.StackLimit.GetValue(evaluatedLevel);
+
+		if (_stackCount == stackLimit &&
+			stackingData.OverflowPolicy == StackOverflowPolicy.DenyApplication)
+		{
+			return false;
+		}
+
+		var evaluatedGameplayEffect = GameplayEffectEvaluatedData.GameplayEffect;
+
+		if (stackingData.InstigatorDenialPolicy.HasValue)
+		{
+			if (stackingData.InstigatorDenialPolicy.Value == StackInstigatorDenialPolicy.DenyIfDifferent &&
+				GameplayEffectEvaluatedData.GameplayEffect.Context != gameplayEffect.Context)
+			{
+				return false;
+			}
+
+			if (stackingData.InstigatorOverridePolicy.HasValue &&
+				stackingData.InstigatorOverridePolicy.Value == StackInstigatorOverridePolicy.Override &&
+				GameplayEffectEvaluatedData.GameplayEffect.Context != gameplayEffect.Context)
+			{
+				evaluatedGameplayEffect = gameplayEffect;
+				hasChanges = true;
+
+				Debug.Assert(
+				stackingData.InstigatorOverrideStackCountPolicy.HasValue,
+				"InstigatorOverrideStackCountPolicy should never be null at this point.");
+
+				switch (stackingData.InstigatorOverrideStackCountPolicy.Value)
+				{
+					case StackInstigatorOverrideStackCountPolicy.ResetStacks:
+						resetStacks = true;
+						break;
+
+					case StackInstigatorOverrideStackCountPolicy.IncreaseStacks:
+						break;
+				}
+			}
+		}
+
 		// It can be a successfull application and still not increase stack count.
 		// In some cases we can even skip re-application.
 		if (resetStacks)
 		{
-			if (_stackCount != 1)
+			var initialStack = stackingData.InitialStack.GetValue(evaluatedLevel);
+
+			if (_stackCount != initialStack)
 			{
-				_stackCount = 1;
+				_stackCount = initialStack;
 				hasChanges = true;
 			}
 		}
 		else
 		{
-			if (_stackCount < stackingData.StackLimit.GetValue(GameplayEffectEvaluatedData.Level))
+			if (_stackCount < stackLimit)
 			{
-				_stackCount++;
+				_stackCount = Math.Min(_stackCount + stacks, stackLimit);
 				hasChanges = true;
 			}
 		}

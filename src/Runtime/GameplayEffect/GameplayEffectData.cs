@@ -62,6 +62,13 @@ public class GameplayEffectData // Immutable
 				throw new Exception($"{DurationType.Instant} effects can't have stacks.");
 			}
 
+			if (stackingData.Value.InitialStack.BaseValue > stackingData.Value.StackLimit.BaseValue ||
+				stackingData.Value.InitialStack.BaseValue == 0)
+			{
+				throw new Exception("Shouldn't set InitialStack count to be higher than the StackLimit nor zero. It's" +
+					" probably a bad configuration.");
+			}
+
 			if (stackingData.Value.StackPolicy == StackPolicy.AggregateByTarget !=
 				stackingData.Value.InstigatorDenialPolicy.HasValue)
 			{

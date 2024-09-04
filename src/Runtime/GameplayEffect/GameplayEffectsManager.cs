@@ -13,6 +13,8 @@ public class GameplayEffectsManager
 		_owner = owner;
 	}
 
+	// Should I allow a custom stackCount when applying?
+	//public void ApplyEffect(GameplayEffect gameplayEffect, int stackCount = 1)
 	public void ApplyEffect(GameplayEffect gameplayEffect)
 	{
 		//var effectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, _owner);
@@ -32,6 +34,7 @@ public class GameplayEffectsManager
 
 				if (stackableEffect is not null)
 				{
+					//var stackSucceeded = stackableEffect.AddStack(gameplayEffect, stackCount);
 					var stackSucceeded = stackableEffect.AddStack(gameplayEffect);
 
 					Console.WriteLine($"Stack application status: {stackSucceeded}");
@@ -42,10 +45,12 @@ public class GameplayEffectsManager
 
 			var activeEffect = new ActiveGameplayEffect(gameplayEffect, _owner);
 			_activeEffects.Add(activeEffect);
+			//activeEffect.Apply(stackCount);
 			activeEffect.Apply();
 		}
 		else
 		{
+			// Execution shouldn't allow use of stackCount
 			// This path is called "Execute" and should work for instant effects
 			gameplayEffect.Execute(gameplayEffect, _owner);
 		}

@@ -84,6 +84,7 @@ public enum StackApplicationResetPeriodPolicy : byte // done, not tested
 public struct StackingData
 {
 	public ScalableInt StackLimit; // All stackable effects
+	public ScalableInt InitialStack; // All stackable effects
 	public StackPolicy StackPolicy; // All stackable effects
 	public StackLevelPolicy StackLevelPolicy; // All stackable effects
 	public StackMagnitudePolicy MagnitudePolicy; // All stackable effects
