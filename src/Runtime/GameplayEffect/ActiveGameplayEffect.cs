@@ -28,8 +28,6 @@ internal class ActiveGameplayEffect
 
 	internal ActiveGameplayEffect(GameplayEffect gameplayEffect, GameplaySystem target)
 	{
-		GameplayEffectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, target);
-
 		if (gameplayEffect.EffectData.StackingData.HasValue)
 		{
 			_stackCount = gameplayEffect.EffectData.StackingData.Value.InitialStack.GetValue(GameplayEffectEvaluatedData.Level);
@@ -38,6 +36,8 @@ internal class ActiveGameplayEffect
 		{
 			_stackCount = 1;
 		}
+
+		GameplayEffectEvaluatedData = new GameplayEffectEvaluatedData(gameplayEffect, target, _stackCount);
 	}
 
 	internal void Apply(bool reApplication = false)
