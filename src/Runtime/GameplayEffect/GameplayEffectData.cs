@@ -136,7 +136,7 @@ public class GameplayEffectData // Immutable
 				stackingData.Value.ApplicationRefreshPolicy.HasValue)
 			{
 				throw new Exception($"Effects set as {DurationType.HasDuration} must define " +
-					$" {nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");
+					$"{nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");
 			}
 		}
 

@@ -97,7 +97,7 @@ public class GameplayEffectsManager
 		}
 	}
 
-	public void UpdateEffects(float deltaTime)
+	public void UpdateEffects(double deltaTime)
 	{
 		foreach (var effect in _activeEffects)
 		{

@@ -6,15 +6,15 @@ namespace GameplayTags.Runtime.GameplayEffect;
 
 internal class ActiveGameplayEffect
 {
-	private float _internalTime;
+	private double _internalTime;
 
 	private int _stackCount;
 
 	internal GameplayEffectEvaluatedData GameplayEffectEvaluatedData { get; private set; }
 
-	internal float RemainingDuration { get; private set; }
+	internal double RemainingDuration { get; private set; }
 
-	internal float NextPeriodicTick { get; private set; }
+	internal double NextPeriodicTick { get; private set; }
 
 	internal float ExecutionCount { get; private set; }
 
@@ -44,7 +44,11 @@ internal class ActiveGameplayEffect
 	{
 		_internalTime = 0;
 		ExecutionCount = 0;
-		RemainingDuration = GameplayEffectEvaluatedData.Duration;
+
+		if (!reApplication)
+		{
+			RemainingDuration = GameplayEffectEvaluatedData.Duration;
+		}
 
 		if (!EffectData.SnapshopLevel)
 		{
@@ -121,6 +125,8 @@ internal class ActiveGameplayEffect
 
 		if (!reApplication)
 		{
+			_stackCount = 0;
+
 			foreach (var modifier in GameplayEffectEvaluatedData.ModifiersEvaluatedData)
 			{
 				if (!modifier.Snapshot)
@@ -293,7 +299,49 @@ internal class ActiveGameplayEffect
 	// This update doesn't work right for stackable+periodic effect if you use a high deltaTime.
 	// This is because it's going to evaluate all the periodic applications and only then remove
 	// all the stacks which would have a different value than if applied in the correct order.
-	internal void Update(float deltaTime)
+	internal void Update(double deltaTime)
+	{
+		if (EffectData.DurationData.Type == DurationType.HasDuration)
+		{
+			RemainingDuration -= deltaTime;
+
+			if (IsExpired)
+			{
+				ExecutePeriodicEffects(deltaTime + RemainingDuration);
+
+				if (EffectData.StackingData.HasValue &&
+					EffectData.StackingData.Value.ExpirationPolicy ==
+					StackExpirationPolicy.RemoveSingleStackAndRefreshDuration)
+				{
+					while (_stackCount >= 1 && RemainingDuration <= 0)
+					{
+						RemoveStack();
+
+						if (_stackCount > 0)
+						{
+							var periodicDelta = Math.Min(-RemainingDuration, GameplayEffectEvaluatedData.Duration);
+							ExecutePeriodicEffects(periodicDelta);
+							RemainingDuration += GameplayEffectEvaluatedData.Duration;
+						}
+					}
+
+					return;
+				}
+
+				Unapply();
+			}
+			else
+			{
+				ExecutePeriodicEffects(deltaTime);
+			}
+		}
+		else
+		{
+			ExecutePeriodicEffects(deltaTime);
+		}
+	}
+
+	private void ExecutePeriodicEffects(double deltaTime)
 	{
 		_internalTime += deltaTime;
 
@@ -305,29 +353,6 @@ internal class ActiveGameplayEffect
 				ExecutionCount++;
 				NextPeriodicTick += GameplayEffectEvaluatedData.Period;
 			}
-		}
-
-		if (EffectData.DurationData.Type == DurationType.HasDuration)
-		{
-			RemainingDuration -= deltaTime;
-		}
-
-		if (IsExpired)
-		{
-			if (EffectData.StackingData.HasValue &&
-				EffectData.StackingData.Value.ExpirationPolicy ==
-				StackExpirationPolicy.RemoveSingleStackAndRefreshDuration)
-			{
-				while (_stackCount >= 1 && RemainingDuration <= 0)
-				{
-					RemoveStack();
-					RemainingDuration += GameplayEffectEvaluatedData.Duration;
-				}
-
-				return;
-			}
-
-			Unapply();
 		}
 	}
 
