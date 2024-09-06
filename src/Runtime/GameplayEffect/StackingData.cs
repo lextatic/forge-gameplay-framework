@@ -21,7 +21,7 @@ public enum StackMagnitudePolicy : byte // done
 // What happens when stack limit is reached and a new application happens?
 public enum StackOverflowPolicy : byte // done, not tested
 {
-	ApplyAnyway,
+	AllowApplication,
 	DenyApplication,
 }
 
