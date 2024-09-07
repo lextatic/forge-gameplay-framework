@@ -278,6 +278,7 @@ internal class ActiveGameplayEffect
 
 		if (stackingData.StackApplicationResetPeriodPolicy == StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication)
 		{
+			_internalTime = 0;
 			NextPeriodicTick = GameplayEffectEvaluatedData.Period;
 		}
 
