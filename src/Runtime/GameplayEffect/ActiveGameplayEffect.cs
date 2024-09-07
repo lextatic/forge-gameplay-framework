@@ -6,6 +6,8 @@ namespace GameplayTags.Runtime.GameplayEffect;
 
 internal class ActiveGameplayEffect
 {
+	private const double Epsilon = 0.00001;
+
 	private double _internalTime;
 
 	private int _stackCount;
@@ -305,9 +307,6 @@ internal class ActiveGameplayEffect
 		ReEvaluateAndReApply(GameplayEffectEvaluatedData.GameplayEffect);
 	}
 
-	// This update doesn't work right for stackable+periodic effect if you use a high deltaTime.
-	// This is because it's going to evaluate all the periodic applications and only then remove
-	// all the stacks which would have a different value than if applied in the correct order.
 	internal void Update(double deltaTime)
 	{
 		if (EffectData.DurationData.Type == DurationType.HasDuration)
@@ -322,7 +321,7 @@ internal class ActiveGameplayEffect
 					EffectData.StackingData.Value.ExpirationPolicy ==
 					StackExpirationPolicy.RemoveSingleStackAndRefreshDuration)
 				{
-					while (_stackCount >= 1 && RemainingDuration <= 0)
+					while (_stackCount >= 1 && RemainingDuration <= Epsilon)
 					{
 						RemoveStack();
 
@@ -356,7 +355,7 @@ internal class ActiveGameplayEffect
 
 		if (EffectData.PeriodicData.HasValue)
 		{
-			while (_internalTime >= NextPeriodicTick)
+			while (_internalTime >= NextPeriodicTick - Epsilon)
 			{
 				GameplayEffect.Execute(GameplayEffectEvaluatedData);
 				ExecutionCount++;

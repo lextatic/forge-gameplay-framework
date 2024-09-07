@@ -2955,13 +2955,9 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		// Simulate for 1.2 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.2);
-
-		// It will fail if use 1.3 seconds here because of floating point precision
-		// Later on it will try to execute 8.7 - 0.8 which is going to evaluate as 7.8999999999999995
-		// instead of 7.9, causing one periodic tick to be skipped...
-		//target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.3);
+		// 0.8 and 1.3 are craftely selected so later on it will try to execute 8.7 - 0.8 which is going to evaluate as
+		// 7.8999999999999995 instead of 7.9, causing one periodic tick to be skipped if not using Epsilon correctly
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.3);
 
 		// (1 + 1) + 1
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.TotalValue);
