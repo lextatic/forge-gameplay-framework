@@ -97,5 +97,6 @@ public struct StackingData
 	public LevelComparison? LevelOverridePolicy; // StackLevelPolicy == AggregateLevels
 	public StackLevelOverrideStackCountPolicy? LevelOverrideStackCountPolicy; // StackLevelPolicy == AggregateLevels && StackLevelOverridePolicy == Any
 	public StackApplicationRefreshPolicy? ApplicationRefreshPolicy; // Effects with duration (non infinite)
-	public StackApplicationResetPeriodPolicy? StackApplicationResetPeriodPolicy; // Periodic effects
+	public StackApplicationResetPeriodPolicy? ApplicationResetPeriodPolicy; // Periodic effects
+	public bool? ExecuteOnSuccessfulApplication; // Periodic effects
 }

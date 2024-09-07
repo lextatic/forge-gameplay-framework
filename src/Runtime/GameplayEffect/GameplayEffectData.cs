@@ -126,17 +126,23 @@ public class GameplayEffectData // Immutable
 					$"have the same value. If it's getting denied, how will it override?");
 			}
 
-			if (stackingData.Value.StackApplicationResetPeriodPolicy.HasValue != PeriodicData.HasValue)
-			{
-				throw new Exception($"Both {nameof(PeriodicData)} and {nameof(StackApplicationResetPeriodPolicy)} " +
-					$"must be either defined or undefined.");
-			}
-
 			if (durationData.Type == DurationType.HasDuration !=
 				stackingData.Value.ApplicationRefreshPolicy.HasValue)
 			{
 				throw new Exception($"Effects set as {DurationType.HasDuration} must define " +
 					$"{nameof(StackApplicationRefreshPolicy)} and not define it if otherwise.");
+			}
+
+			if (stackingData.Value.ExecuteOnSuccessfulApplication.HasValue != PeriodicData.HasValue)
+			{
+				throw new Exception($"Both {nameof(PeriodicData)} and ExecuteOnSuccessfulApplication must be either " +
+					$"defined or undefined.");
+			}
+
+			if (stackingData.Value.ApplicationResetPeriodPolicy.HasValue != PeriodicData.HasValue)
+			{
+				throw new Exception($"Both {nameof(PeriodicData)} and {nameof(StackApplicationResetPeriodPolicy)} " +
+					$"must be either defined or undefined.");
 			}
 		}
 

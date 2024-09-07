@@ -390,7 +390,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 1 turn or seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.1f);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -399,12 +399,14 @@ public class GameplayEffectsTests
 
 		effect.LevelUp();
 
-		// Simulate 1.5 more second (3 periods)
+		// Simulate 1.5 more second (2 periods)
+		// Previously scheduled execution won't change on LevelUp
+		// remaining 0.9f -(exec)- 0.5f -(exec)- 0.1f
 		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.5f);
 
-		// 21 + (20 * 3)
-		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.TotalValue);
-		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.BaseValue);
+		// 21 + (20 * 2)
+		Assert.AreEqual(61, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(61, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 	}
@@ -1133,7 +1135,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1211,7 +1214,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1288,7 +1292,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1353,7 +1358,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1473,7 +1479,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = LevelComparison.Lower | LevelComparison.Equal | LevelComparison.Higher,
 				LevelOverrideStackCountPolicy = StackLevelOverrideStackCountPolicy.IncreaseStacks,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1599,7 +1606,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = LevelComparison.Lower | LevelComparison.Equal | LevelComparison.Higher,
 				LevelOverrideStackCountPolicy = StackLevelOverrideStackCountPolicy.IncreaseStacks,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1725,7 +1733,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = LevelComparison.Equal | LevelComparison.Higher,
 				LevelOverrideStackCountPolicy = StackLevelOverrideStackCountPolicy.IncreaseStacks,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1851,7 +1860,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -1994,7 +2004,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.RefreshOnSuccessfulApplication,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2066,7 +2077,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.RefreshOnSuccessfulApplication,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2146,7 +2158,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.RefreshOnSuccessfulApplication,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2218,7 +2231,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -2321,7 +2335,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = null,
-				StackApplicationResetPeriodPolicy = null,
+				ApplicationResetPeriodPolicy = null,
+				ExecuteOnSuccessfulApplication = null,
 			},
 			null);
 
@@ -2546,7 +2561,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.RefreshOnSuccessfulApplication,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2635,7 +2651,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.NeverRefresh,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2724,7 +2741,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.RefreshOnSuccessfulApplication,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2813,7 +2831,8 @@ public class GameplayEffectsTests
 				LevelOverridePolicy = null,
 				LevelOverrideStackCountPolicy = null,
 				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.NeverRefresh,
-				StackApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication,
+				ExecuteOnSuccessfulApplication = false,
 			},
 			new PeriodicData
 			{
@@ -2869,6 +2888,110 @@ public class GameplayEffectsTests
 		// (1 + 1) + (9 * 1) + (1 * 1)
 		Assert.AreEqual(12, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(12, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+	}
+
+	[TestMethod]
+	public void Periodic_effect_should_execute_on_stack_application()
+	{
+		var instigator = new Entity();
+		var target = new Entity();
+
+		var effectData = new GameplayEffectData(
+			"Buff",
+			new DurationData
+			{
+				Type = DurationType.HasDuration,
+				Duration = new ScalableFloat(10),
+			},
+			new StackingData
+			{
+				StackLimit = new ScalableInt(3),
+				InitialStack = new ScalableInt(1),
+				StackPolicy = StackPolicy.AggregateBySource,
+				StackLevelPolicy = StackLevelPolicy.SegregateLevels,
+				MagnitudePolicy = StackMagnitudePolicy.Sum,
+				OverflowPolicy = StackOverflowPolicy.DenyApplication,
+				ExpirationPolicy = StackExpirationPolicy.RemoveSingleStackAndRefreshDuration,
+				InstigatorDenialPolicy = null,
+				InstigatorOverridePolicy = null,
+				InstigatorOverrideStackCountPolicy = null,
+				LevelDenialPolicy = null,
+				LevelOverridePolicy = null,
+				LevelOverrideStackCountPolicy = null,
+				ApplicationRefreshPolicy = StackApplicationRefreshPolicy.NeverRefresh,
+				ApplicationResetPeriodPolicy = StackApplicationResetPeriodPolicy.NeverReset,
+				ExecuteOnSuccessfulApplication = true,
+			},
+			new PeriodicData
+			{
+				ExecuteOnApplication = true,
+				Period = new ScalableFloat(1),
+			});
+
+		effectData.Modifiers.Add(new Modifier
+		{
+			Attribute = TagName.FromString("TestAttributeSet.Attribute1"),
+			Operation = ModifierOperation.Flat,
+			Magnitude = new ModifierMagnitude
+			{
+				MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
+				ScalableFloatMagnitude = new ScalableFloat(1),
+			},
+		});
+
+		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
+		{
+			EffectCauser = instigator,
+			Instigator = instigator,
+		});
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+
+		// 1 + 1
+		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		// Simulate for 1.2 seconds
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.2);
+
+		// It will fail if use 1.3 seconds here because of floating point precision
+		// Later on it will try to execute 8.7 - 0.8 which is going to evaluate as 7.8999999999999995
+		// instead of 7.9, causing one periodic tick to be skipped...
+		//target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.3);
+
+		// (1 + 1) + 1
+		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+
+		// (1 + 1) + (1 * 1) + 2
+		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		// Simulate for 0.8 seconds
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.8);
+
+		// (1 + 1) + (1 * 1) + 2 + (2 * 1)
+		Assert.AreEqual(7, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(7, target.PlayerAttributeSet.Attribute1.BaseValue);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
+		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
+
+		// Simulate for 10 seconds
+		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(20);
+
+		// (1 + 1) + (1 * 1) + 2 + (2 * 1) + (2 * 8) + (1 * 10)
+		Assert.AreEqual(33, target.PlayerAttributeSet.Attribute1.TotalValue);
+		Assert.AreEqual(33, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 	}

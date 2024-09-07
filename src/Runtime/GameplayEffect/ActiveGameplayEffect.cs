@@ -16,7 +16,7 @@ internal class ActiveGameplayEffect
 
 	internal double NextPeriodicTick { get; private set; }
 
-	internal float ExecutionCount { get; private set; }
+	internal int ExecutionCount { get; private set; }
 
 	internal bool IsExpired => EffectData.DurationData.Type ==
 		DurationType.HasDuration &&
@@ -42,11 +42,10 @@ internal class ActiveGameplayEffect
 
 	internal void Apply(bool reApplication = false)
 	{
-		_internalTime = 0;
-		ExecutionCount = 0;
-
 		if (!reApplication)
 		{
+			ExecutionCount = 0;
+			_internalTime = 0;
 			RemainingDuration = GameplayEffectEvaluatedData.Duration;
 		}
 
@@ -76,7 +75,10 @@ internal class ActiveGameplayEffect
 				ExecutionCount++;
 			}
 
-			NextPeriodicTick = GameplayEffectEvaluatedData.Period;
+			if (!reApplication)
+			{
+				NextPeriodicTick = GameplayEffectEvaluatedData.Period;
+			}
 		}
 		else
 		{
@@ -276,10 +278,16 @@ internal class ActiveGameplayEffect
 			RemainingDuration = GameplayEffectEvaluatedData.Duration;
 		}
 
-		if (stackingData.StackApplicationResetPeriodPolicy == StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication)
+		if (stackingData.ApplicationResetPeriodPolicy == StackApplicationResetPeriodPolicy.ResetOnSuccessfulApplication)
 		{
 			_internalTime = 0;
 			NextPeriodicTick = GameplayEffectEvaluatedData.Period;
+		}
+
+		if (stackingData.ExecuteOnSuccessfulApplication == true)
+		{
+			GameplayEffect.Execute(GameplayEffectEvaluatedData);
+			ExecutionCount++;
 		}
 
 		return true;
