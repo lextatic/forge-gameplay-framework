@@ -1,14 +1,30 @@
-[gd_scene load_steps=3 format=3 uid="uid://csx2canxmld7u"]
+[gd_scene load_steps=6 format=3 uid="uid://csx2canxmld7u"]
 
 [ext_resource type="PackedScene" uid="uid://bdlfuxjf8ogc3" path="res://tags.tscn" id="1_44rno"]
 [ext_resource type="Script" path="res://Main.cs" id="1_toki6"]
+[ext_resource type="Resource" uid="uid://dw1s2vwpjsyw7" path="res://Buff1.tres" id="2_tok1j"]
+[ext_resource type="Script" path="res://Player.cs" id="3_p52vb"]
+[ext_resource type="PackedScene" uid="uid://16rgngtcgnk" path="res://PlayerStats.tscn" id="5_onylk"]
 
-[node name="Main" type="Node" node_paths=PackedStringArray("Tags1", "Tags2")]
+[node name="Main" type="Node" node_paths=PackedStringArray("Tags1", "Tags2", "Player")]
 script = ExtResource("1_toki6")
 Tags1 = NodePath("Tags")
 Tags2 = NodePath("Tags2")
+Player = NodePath("Player")
+Effect = ExtResource("2_tok1j")
 
 [node name="Tags" parent="." instance=ExtResource("1_44rno")]
 
 [node name="Tags2" parent="." instance=ExtResource("1_44rno")]
 ContainerTags = ["1", "1.2", "1.2.3"]
+
+[node name="Player" type="Node" parent="."]
+script = ExtResource("3_p52vb")
+Health = 100
+Mana = 100
+Strength = 10
+Agility = 5
+Intelligence = 8
+
+[node name="PlayerStats" parent="." node_paths=PackedStringArray("Player") instance=ExtResource("5_onylk")]
+Player = NodePath("../Player")

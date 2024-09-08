@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://16rgngtcgnk"]
+
+[ext_resource type="Script" path="res://PlayerStatsUI.cs" id="1_l3fuk"]
+
+[node name="PlayerStats" type="Control" node_paths=PackedStringArray("HealthLabel", "ManaLabel", "StrengthLabel", "AgilityLabel", "IntelligenceLabel")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l3fuk")
+HealthLabel = NodePath("VBoxContainer/Health")
+ManaLabel = NodePath("VBoxContainer/Mana")
+StrengthLabel = NodePath("VBoxContainer/Strength")
+AgilityLabel = NodePath("VBoxContainer/Agility")
+IntelligenceLabel = NodePath("VBoxContainer/Intelligence")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Health" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Health: "
+
+[node name="Mana" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Mana: "
+
+[node name="Strength" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Strength: "
+
+[node name="Agility" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Agility: "
+
+[node name="Intelligence" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Inteligence: "
