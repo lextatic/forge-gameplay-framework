@@ -1,3 +1,4 @@
+using GameplayTags.Runtime.GameplayEffect;
 using Godot;
 
 public partial class Main : Node
@@ -14,6 +15,15 @@ public partial class Main : Node
 	[Export]
 	public GameplayEffect Effect;
 
+	private GameplayEffectData _effectData;
+
+	public override void _Ready()
+	{
+		base._Ready();
+
+		_effectData = Effect.GetEffectData();
+	}
+
 	public override void _Process(double delta)
 	{
 		base._Process(delta);
@@ -22,10 +32,8 @@ public partial class Main : Node
 
 		if (Input.IsActionJustPressed("Test"))
 		{
-			var effectData = Effect.GetEffectData();
-
 			var effect = new GameplayTags.Runtime.GameplayEffect.GameplayEffect(
-				effectData,
+				_effectData,
 				1,
 				new GameplayTags.Runtime.GameplayEffect.GameplayEffectContext
 				{
