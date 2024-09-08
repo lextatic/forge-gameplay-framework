@@ -1,8 +1,6 @@
-using GameplayTags.Runtime;
 using GameplayTags.Runtime.GameplayEffect;
 using Godot;
 using Godot.Collections;
-using System.Collections.Generic;
 
 [Tool]
 public partial class GameplayEffect : Resource
@@ -117,16 +115,7 @@ public partial class GameplayEffect : Resource
 
 		foreach (var modifier in Modifiers)
 		{
-			effect.Modifiers.Add(new Modifier
-			{
-				Attribute = TagName.FromString(modifier.Attribute),
-				Operation = modifier.Operation,
-				Magnitude = new ModifierMagnitude
-				{
-					MagnitudeCalculationType = MagnitudeCalculationType.ScalableFloat,
-					ScalableFloatMagnitude = new ScalableFloat(modifier.Magnitude),
-				},
-			});
+			effect.Modifiers.Add(modifier.GetModifier());
 		}
 
 		return effect;

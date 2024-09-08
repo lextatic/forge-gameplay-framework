@@ -5,10 +5,19 @@
 
 [sub_resource type="Resource" id="Resource_bllu2"]
 script = ExtResource("1_jeosu")
-Attribute = "PlayerAttributeSet.Strength"
+Attribute = "PlayerAttributeSet.Mana"
 Operation = 0
-Magnitude = 5.0
 Channel = 0
+CalculationType = 1
+ScalableFloat = 0.0
+CapturedAttribute = "PlayerAttributeSet.Intelligence"
+CaptureSource = 0
+SnapshotAttribute = false
+AttributeCalculationType = 0
+Coeficient = 1.0
+PreMultiplyAdditiveValue = 0.0
+PostMultiplyAdditiveValue = 0.0
+FinalChannel = 0
 
 [resource]
 script = ExtResource("1_smvn5")
