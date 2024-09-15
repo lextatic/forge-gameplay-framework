@@ -20,10 +20,10 @@ public struct GameplayEffectEvaluatedData
 	public int Stack;
 	public float Duration;
 	public float Period;
-	public GameplaySystem Target;
+	public IForgeEntity Target;
 
 	public GameplayEffectEvaluatedData(GameplayEffect gameplayEffect,
-		GameplaySystem target,
+		IForgeEntity target,
 		int stack = 1,
 		int? level = null)
 	{
@@ -53,7 +53,7 @@ public struct GameplayEffectEvaluatedData
 					!modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Snapshot ?
 					modifier.Magnitude.AttributeBasedFloat.BackingAttribute.GetAttribute(
 						modifier.Magnitude.AttributeBasedFloat.BackingAttribute.Source == AttributeCaptureSource.Source ?
-						gameplayEffect.Context.Instigator.GameplaySystem : target) : null,
+						gameplayEffect.Context.Instigator : target) : null,
 			});
 		}
 

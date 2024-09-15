@@ -6,9 +6,9 @@ public class GameplayEffectsManager
 {
 	private readonly List<ActiveGameplayEffect> _activeEffects = new ();
 
-	private GameplaySystem _owner;
+	private IForgeEntity _owner;
 
-	public GameplayEffectsManager(GameplaySystem owner)
+	public GameplayEffectsManager(IForgeEntity owner)
 	{
 		_owner = owner;
 	}
@@ -137,7 +137,7 @@ public class GameplayEffectsManager
 
 public struct StackData
 {
-	public IGameplaySystem Instigator;
+	public IForgeEntity Instigator;
 	public int EffectLevel;
 	public int StackCount;
 }

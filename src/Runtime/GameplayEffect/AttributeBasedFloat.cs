@@ -26,7 +26,7 @@ public struct AttributeCaptureDefinition
 
 	public bool Snapshot; // Only Infinite and HasDuration effects can snapshot
 
-	public Attribute.Attribute GetAttribute(GameplaySystem source)
+	public Attribute.Attribute GetAttribute(IForgeEntity source)
 	{
 		return source.Attributes[Attribute];
 	}
@@ -50,14 +50,14 @@ public class AttributeBasedFloat
 	 * attribute directly. */
 	public Curve? AttributeCurve;
 
-	public float CalculateMagnitude(GameplayEffect effect, GameplaySystem target, int? level = null)
+	public float CalculateMagnitude(GameplayEffect effect, IForgeEntity target, int? level = null)
 	{
 		Attribute.Attribute? attribute = null;
 
 		switch (BackingAttribute.Source)
 		{
 			case AttributeCaptureSource.Source:
-				attribute = effect.Context.Instigator.GameplaySystem.Attributes[BackingAttribute.Attribute];
+				attribute = effect.Context.Instigator.Attributes[BackingAttribute.Attribute];
 				break;
 
 			case AttributeCaptureSource.Target:

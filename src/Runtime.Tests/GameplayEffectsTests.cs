@@ -1,6 +1,7 @@
 #pragma warning disable SA1600 // Elements should be documented
 using GameplayTags.Runtime.Attribute;
 using GameplayTags.Runtime.GameplayEffect;
+using System.Diagnostics;
 
 namespace GameplayTags.Runtime.Tests;
 using Attribute = Attribute.Attribute;
@@ -40,7 +41,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -93,7 +94,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(7, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(7, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -133,7 +134,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -166,7 +167,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(25, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(25, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -199,7 +200,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
+		target.GameplayEffectsManager.ApplyEffect(effect3);
 
 		Assert.AreEqual(8, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(8, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -232,7 +233,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect4);
+		target.GameplayEffectsManager.ApplyEffect(effect4);
 
 		Assert.AreEqual(42, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(42, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -274,7 +275,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -283,7 +284,7 @@ public class GameplayEffectsTests
 
 		effect.LevelUp();
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(31, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(31, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -326,7 +327,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -382,7 +383,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -390,7 +391,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 1 turn or seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.1f);
+		target.GameplayEffectsManager.UpdateEffects(1.1f);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -402,7 +403,7 @@ public class GameplayEffectsTests
 		// Simulate 1.5 more second (2 periods)
 		// Previously scheduled execution won't change on LevelUp
 		// remaining 0.9f -(exec)- 0.5f -(exec)- 0.1f
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.5f);
+		target.GameplayEffectsManager.UpdateEffects(1.5f);
 
 		// 21 + (20 * 2)
 		Assert.AreEqual(61, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -443,7 +444,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -453,7 +454,7 @@ public class GameplayEffectsTests
 		// Simulate 5 seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
+			target.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -494,7 +495,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -527,7 +528,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(25, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -560,7 +561,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
+		target.GameplayEffectsManager.ApplyEffect(effect3);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -623,7 +624,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(8, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -664,7 +665,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -674,7 +675,7 @@ public class GameplayEffectsTests
 		// Simulate 5 seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
+			target.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -685,7 +686,7 @@ public class GameplayEffectsTests
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
+			target.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -730,7 +731,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -738,7 +739,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 1 turn or seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplayEffectsManager.UpdateEffects(1);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -748,7 +749,7 @@ public class GameplayEffectsTests
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
+			target.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
 		Assert.AreEqual(71, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -793,7 +794,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -802,7 +803,7 @@ public class GameplayEffectsTests
 
 		effect.LevelUp();
 		// Simulate for 1 turn or seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplayEffectsManager.UpdateEffects(1);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -859,7 +860,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(9, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(9, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -867,7 +868,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 1 turn or seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplayEffectsManager.UpdateEffects(1);
 
 		Assert.AreEqual(17, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(17, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -900,7 +901,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		instigator.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		instigator.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(4, instigator.PlayerAttributeSet.Attribute2.TotalValue);
 		Assert.AreEqual(4, instigator.PlayerAttributeSet.Attribute2.BaseValue);
@@ -909,14 +910,14 @@ public class GameplayEffectsTests
 
 		// Simulate for 1 turn or seconds
 		// New magnitude = (([4] + 1) * 2) + 2 = 12
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplayEffectsManager.UpdateEffects(1);
 
 		Assert.AreEqual(29, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(29, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		instigator.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		instigator.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(6, instigator.PlayerAttributeSet.Attribute2.TotalValue);
 		Assert.AreEqual(6, instigator.PlayerAttributeSet.Attribute2.BaseValue);
@@ -929,7 +930,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// New magnitude = (([6] + 1) * 2) + 2 = 16
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplayEffectsManager.UpdateEffects(1);
 
 		Assert.AreEqual(45, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(45, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -982,7 +983,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(9, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -1015,7 +1016,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		instigator.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		instigator.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(4, instigator.PlayerAttributeSet.Attribute2.TotalValue);
 		Assert.AreEqual(4, instigator.PlayerAttributeSet.Attribute2.BaseValue);
@@ -1028,7 +1029,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(12, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		instigator.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		instigator.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(6, instigator.PlayerAttributeSet.Attribute2.TotalValue);
 		Assert.AreEqual(6, instigator.PlayerAttributeSet.Attribute2.BaseValue);
@@ -1079,7 +1080,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -1087,7 +1088,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 1 turn or seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1);
+		target.GameplayEffectsManager.UpdateEffects(1);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -1097,7 +1098,7 @@ public class GameplayEffectsTests
 		// Simulate 5 more seconds
 		for (int i = 0; i < 32 * 5; i++)
 		{
-			target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.03125f);
+			target.GameplayEffectsManager.UpdateEffects(0.03125f);
 		}
 
 		Assert.AreEqual(41, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1157,7 +1158,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -1170,14 +1171,14 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(20, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2, stackDataList[0].StackCount);
@@ -1236,7 +1237,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
@@ -1249,14 +1250,14 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(10, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2,  stackDataList[0].StackCount);
@@ -1314,14 +1315,14 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		Assert.AreEqual(41, target.PlayerAttributeSet.Attribute1.TotalValue);
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.BaseValue);
 		Assert.AreEqual(40, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(4, stackDataList[0].StackCount);
@@ -1383,7 +1384,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + [5]
 		Assert.AreEqual(6, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1391,7 +1392,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1404,7 +1405,7 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [5] + [10]
 		Assert.AreEqual(16, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1412,7 +1413,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(15, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(2, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1428,7 +1429,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
+		target.GameplayEffectsManager.ApplyEffect(effect3);
 
 		// 1 + [5] + [10] + [15]
 		Assert.AreEqual(31, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1436,7 +1437,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(30, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(3, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1504,7 +1505,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + [5]
 		Assert.AreEqual(6, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1512,7 +1513,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1525,7 +1526,7 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [10] * 2
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1533,7 +1534,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(20, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2, stackDataList[0].StackCount);
@@ -1546,7 +1547,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
+		target.GameplayEffectsManager.ApplyEffect(effect3);
 
 		// 1 + [15] * 3
 		Assert.AreEqual(46, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1554,14 +1555,14 @@ public class GameplayEffectsTests
 		Assert.AreEqual(45, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
 		Assert.AreEqual(3, stackDataList[0].EffectLevel);
 		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [10] * 4
 		Assert.AreEqual(41, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1569,7 +1570,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(40, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(4, stackDataList[0].StackCount);
@@ -1631,7 +1632,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + [5]
 		Assert.AreEqual(6, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1639,7 +1640,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1652,7 +1653,7 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [5]
 		Assert.AreEqual(6, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1660,7 +1661,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1673,7 +1674,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
+		target.GameplayEffectsManager.ApplyEffect(effect3);
 
 		// 1 + [15] * 2
 		Assert.AreEqual(31, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1681,14 +1682,14 @@ public class GameplayEffectsTests
 		Assert.AreEqual(30, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2, stackDataList[0].StackCount);
 		Assert.AreEqual(3, stackDataList[0].EffectLevel);
 		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [15] * 2
 		Assert.AreEqual(31, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1696,7 +1697,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(30, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2, stackDataList[0].StackCount);
@@ -1758,7 +1759,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + [5]
 		Assert.AreEqual(6, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1766,7 +1767,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -1779,7 +1780,7 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [10] * 2
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1787,7 +1788,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(20, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2, stackDataList[0].StackCount);
@@ -1800,7 +1801,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect3);
+		target.GameplayEffectsManager.ApplyEffect(effect3);
 
 		// 1 + [15] * 3
 		Assert.AreEqual(46, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1808,14 +1809,14 @@ public class GameplayEffectsTests
 		Assert.AreEqual(45, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
 		Assert.AreEqual(3, stackDataList[0].EffectLevel);
 		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [15] * 3
 		Assert.AreEqual(46, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1823,7 +1824,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(45, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
@@ -1915,7 +1916,7 @@ public class GameplayEffectsTests
 		});
 
 		// Increase instigator2 Attribute2 to 5.
-		instigator2.GameplaySystem.GameplayEffectsManager.ApplyEffect(levelUpEffect);
+		instigator2.GameplayEffectsManager.ApplyEffect(levelUpEffect);
 
 		var effect = new GameplayEffect.GameplayEffect(effectData, 1, new GameplayEffectContext()
 		{
@@ -1923,7 +1924,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + [2]
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1931,14 +1932,14 @@ public class GameplayEffectsTests
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
 		Assert.AreEqual(1, stackDataList[0].EffectLevel);
 		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + [2] * 2
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1946,7 +1947,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(2, stackDataList[0].StackCount);
@@ -1959,7 +1960,7 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + [5] * 1
 		Assert.AreEqual(6, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -1967,7 +1968,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(1, stackDataList[0].StackCount);
@@ -2030,7 +2031,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 3
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2039,7 +2040,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 40 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(40);
+		target.GameplayEffectsManager.UpdateEffects(40);
 
 		// (1 + 3) + (10 * 3) + (10 * 2) + (10 * 1)
 		Assert.AreEqual(64, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2103,7 +2104,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 3
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2112,7 +2113,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 40 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(13.54f);
+		target.GameplayEffectsManager.UpdateEffects(13.54f);
 
 		// (1 + 3) + (10 * 3) + (3 * 2)
 		Assert.AreEqual(40, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2120,7 +2121,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(43.54f);
+		target.GameplayEffectsManager.UpdateEffects(43.54f);
 
 		// (1 + 3) + (10 * 3) + (10 * 2) + (10 * 1)
 		Assert.AreEqual(64, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2184,7 +2185,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 3
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2193,7 +2194,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 40 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(40);
+		target.GameplayEffectsManager.UpdateEffects(40);
 
 		// (1 + 3) + (10 * 3)
 		Assert.AreEqual(34, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2253,7 +2254,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2261,7 +2262,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 2
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2269,7 +2270,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 3
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2283,14 +2284,14 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
 		Assert.AreEqual(1, stackDataList[0].EffectLevel);
 		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + 3 - Deny application
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2298,7 +2299,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
@@ -2357,7 +2358,7 @@ public class GameplayEffectsTests
 			Instigator = instigator1,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2365,7 +2366,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 2
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2373,7 +2374,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 3
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2387,14 +2388,14 @@ public class GameplayEffectsTests
 			Instigator = instigator2,
 		});
 
-		var stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		var stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
 		Assert.AreEqual(1, stackDataList[0].EffectLevel);
 		Assert.AreEqual(instigator1, stackDataList[0].Instigator);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect2);
+		target.GameplayEffectsManager.ApplyEffect(effect2);
 
 		// 1 + 3 - Allow application - updates context
 		Assert.AreEqual(4, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2402,7 +2403,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		stackDataList = target.GameplaySystem.GameplayEffectsManager.GetEffectStackCount(effectData);
+		stackDataList = target.GameplayEffectsManager.GetEffectStackCount(effectData);
 
 		Assert.AreEqual(1, stackDataList.Count);
 		Assert.AreEqual(3, stackDataList[0].StackCount);
@@ -2442,7 +2443,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 80
 		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2450,7 +2451,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(80, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 80 + 80
 		Assert.AreEqual(99, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2458,7 +2459,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(160, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(62, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.UnapplyEffect(effect);
+		target.GameplayEffectsManager.UnapplyEffect(effect);
 
 		// 1 + 80
 		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2466,7 +2467,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(80, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.UnapplyEffect(effect);
+		target.GameplayEffectsManager.UnapplyEffect(effect);
 
 		// 1 + 80
 		Assert.AreEqual(1, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2507,7 +2508,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 80
 		Assert.AreEqual(81, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2515,7 +2516,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// Min(99, 1 + 80 + 80)
 		Assert.AreEqual(99, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2523,7 +2524,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.UnapplyEffect(effect);
+		target.GameplayEffectsManager.UnapplyEffect(effect);
 
 		// Min(99, 1 + 80 + 80)
 		Assert.AreEqual(99, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2587,7 +2588,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2596,7 +2597,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 9.5 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(9);
+		target.GameplayEffectsManager.UpdateEffects(9);
 
 		// (1 + 1) + 9
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2604,7 +2605,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// (1 + 1) + (9 * 1)
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2613,7 +2614,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 20 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(30);
+		target.GameplayEffectsManager.UpdateEffects(30);
 
 		// (1 + 1) + (9 * 1) + (10 * 2) + (10 * 1)
 		Assert.AreEqual(41, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2677,7 +2678,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2686,7 +2687,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 9.5 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(9);
+		target.GameplayEffectsManager.UpdateEffects(9);
 
 		// (1 + 1) + 9
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2694,7 +2695,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// (1 + 1) + (9 * 1)
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2703,7 +2704,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 20 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(30);
+		target.GameplayEffectsManager.UpdateEffects(30);
 
 		// (1 + 1) + (9 * 1) + (1 * 2) + (10 * 1)
 		Assert.AreEqual(23, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2767,7 +2768,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2776,7 +2777,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 9.5 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(9);
+		target.GameplayEffectsManager.UpdateEffects(9);
 
 		// (1 + 1) + 9
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2784,7 +2785,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// (1 + 1) + (9 * 1)
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2793,7 +2794,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 20 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(20);
+		target.GameplayEffectsManager.UpdateEffects(20);
 
 		// (1 + 1) + (9 * 1) + (10 * 1)
 		Assert.AreEqual(21, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2857,7 +2858,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2866,7 +2867,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 9.5 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(9);
+		target.GameplayEffectsManager.UpdateEffects(9);
 
 		// (1 + 1) + 9
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2874,7 +2875,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// (1 + 1) + (9 * 1)
 		Assert.AreEqual(11, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2883,7 +2884,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 20 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(20);
+		target.GameplayEffectsManager.UpdateEffects(20);
 
 		// (1 + 1) + (9 * 1) + (1 * 1)
 		Assert.AreEqual(12, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2947,7 +2948,7 @@ public class GameplayEffectsTests
 			Instigator = instigator,
 		});
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// 1 + 1
 		Assert.AreEqual(2, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2957,7 +2958,7 @@ public class GameplayEffectsTests
 
 		// 0.8 and 1.3 are craftely selected so later on it will try to execute 8.7 - 0.8 which is going to evaluate as
 		// 7.8999999999999995 instead of 7.9, causing one periodic tick to be skipped if not using Epsilon correctly
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(1.3);
+		target.GameplayEffectsManager.UpdateEffects(1.3);
 
 		// (1 + 1) + 1
 		Assert.AreEqual(3, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2965,7 +2966,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Modifier);
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
-		target.GameplaySystem.GameplayEffectsManager.ApplyEffect(effect);
+		target.GameplayEffectsManager.ApplyEffect(effect);
 
 		// (1 + 1) + (1 * 1) + 2
 		Assert.AreEqual(5, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2974,7 +2975,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 0.8 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(0.8);
+		target.GameplayEffectsManager.UpdateEffects(0.8);
 
 		// (1 + 1) + (1 * 1) + 2 + (2 * 1)
 		Assert.AreEqual(7, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -2983,7 +2984,7 @@ public class GameplayEffectsTests
 		Assert.AreEqual(0, target.PlayerAttributeSet.Attribute1.Overflow);
 
 		// Simulate for 10 seconds
-		target.GameplaySystem.GameplayEffectsManager.UpdateEffects(20);
+		target.GameplayEffectsManager.UpdateEffects(20);
 
 		// (1 + 1) + (1 * 1) + 2 + (2 * 1) + (2 * 8) + (1 * 10)
 		Assert.AreEqual(33, target.PlayerAttributeSet.Attribute1.TotalValue);
@@ -3014,17 +3015,39 @@ public class GameplayEffectsTests
 		}
 	}
 
-	private class Entity : IGameplaySystem
+	private class Entity : IForgeEntity
 	{
-		public GameplaySystem GameplaySystem { get; }
-
 		public TestAttributeSet PlayerAttributeSet { get; }
+
+		public GameplayEffectsManager GameplayEffectsManager { get; }
+
+		public List<AttributeSet> AttributeSets { get; }
+
+		public Dictionary<TagName, Attribute> Attributes { get; }
+
+		public GameplayTagContainer GameplayTags { get; }
+
+		//public void AddAttributeSet(AttributeSet attributeSet)
+		//{
+		//	Debug.Assert(attributeSet is not null, "AttributeSets is not initialized.");
+
+		//	AttributeSets.Add(attributeSet);
+
+		//	foreach (var attribute in attributeSet.AttributesMap)
+		//	{
+		//		Attributes.Add(attribute.Key, attribute.Value);
+		//	}
+		//}
 
 		public Entity()
 		{
-			GameplaySystem = new GameplaySystem();
+			GameplayEffectsManager = new(this);
+			AttributeSets = new();
+			Attributes = new();
+			GameplayTags = new();
+
 			PlayerAttributeSet = new TestAttributeSet();
-			GameplaySystem.AddAttributeSet(PlayerAttributeSet);
+			((IForgeEntity)this).AddAttributeSet(PlayerAttributeSet);
 		}
 	}
 }

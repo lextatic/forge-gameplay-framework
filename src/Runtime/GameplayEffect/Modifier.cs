@@ -18,7 +18,7 @@ public class ModifierMagnitude
 	// CustomCalculationClass
 	// Setbycaller
 
-	public float GetMagnitude(GameplayEffect effect, GameplaySystem target, int? level = null)
+	public float GetMagnitude(GameplayEffect effect, IForgeEntity target, int? level = null)
 	{
 		switch (MagnitudeCalculationType)
 		{

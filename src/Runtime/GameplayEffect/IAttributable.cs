@@ -1,30 +1,27 @@
 using GameplayTags.Runtime.Attribute;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 
 namespace GameplayTags.Runtime.GameplayEffect;
 #pragma warning disable SA1600
 
-public interface IGameplaySystem
-{
-	public GameplaySystem GameplaySystem { get; }
-}
-
-public class GameplaySystem
+public interface IForgeEntity
 {
 	public GameplayEffectsManager GameplayEffectsManager { get; }
 
+	// TODO: Convert AttributeSets into a container class that also keeps the Attributes dictionary.
 	public List<AttributeSet> AttributeSets { get; }
 
 	public Dictionary<TagName, Attribute.Attribute> Attributes { get; }
 
-	public GameplaySystem()
-	{
-		AttributeSets = new List<AttributeSet>();
-		Attributes = new Dictionary<TagName, Attribute.Attribute>();
-		GameplayEffectsManager = new GameplayEffectsManager(this);
-	}
+	public GameplayTagContainer GameplayTags { get; }
+
+	//void AddAttributeSet(AttributeSet attributeSet);
 
 	public void AddAttributeSet(AttributeSet attributeSet)
 	{
+		Debug.Assert(attributeSet is not null, "AttributeSets is not initialized.");
+
 		AttributeSets.Add(attributeSet);
 
 		foreach (var attribute in attributeSet.AttributesMap)

@@ -2,8 +2,8 @@ namespace GameplayTags.Runtime.GameplayEffect;
 
 public struct GameplayEffectContext : IEquatable<GameplayEffectContext>
 {
-	public IGameplaySystem Instigator; // Entity responsible for causing the action or event (eg. Character, NPC, Environment)
-	public IGameplaySystem EffectCauser; // The actual entity that caused the effect (eg. Weapon, Projectile, Trap)
+	public IForgeEntity Instigator; // Entity responsible for causing the action or event (eg. Character, NPC, Environment)
+	public IForgeEntity EffectCauser; // The actual entity that caused the effect (eg. Weapon, Projectile, Trap)
 
 	public bool Equals(GameplayEffectContext other)
 	{
@@ -58,7 +58,7 @@ public class GameplayEffect
 		Level++;
 	}
 
-	internal void Execute(GameplayEffect gameplayEffect, GameplaySystem target)
+	internal void Execute(GameplayEffect gameplayEffect, IForgeEntity target)
 	{
 		Execute(new GameplayEffectEvaluatedData(gameplayEffect, target));
 	}

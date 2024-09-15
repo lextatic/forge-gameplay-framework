@@ -28,7 +28,7 @@ internal class ActiveGameplayEffect
 
 	private GameplayEffect GameplayEffect => GameplayEffectEvaluatedData.GameplayEffect;
 
-	internal ActiveGameplayEffect(GameplayEffect gameplayEffect, GameplaySystem target)
+	internal ActiveGameplayEffect(GameplayEffect gameplayEffect, IForgeEntity target)
 	{
 		if (gameplayEffect.EffectData.StackingData.HasValue)
 		{
